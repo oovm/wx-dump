@@ -1,0 +1,78 @@
+use super::*;
+use aes::cipher::{InvalidLength, block_padding::UnpadError};
+use std::{
+    array::TryFromSliceError,
+    num::ParseIntError,
+    path::{Path, StripPrefixError},
+    string::FromUtf8Error,
+};
+
+impl From<WxErrorKind> for WxError {
+    fn from(value: WxErrorKind) -> Self {
+        Self { kind: Box::new(value) }
+    }
+}
+impl From<std::io::Error> for WxError {
+    fn from(error: std::io::Error) -> Self {
+        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+    }
+}
+impl From<StripPrefixError> for WxError {
+    fn from(error: StripPrefixError) -> Self {
+        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+    }
+}
+
+impl From<InvalidLength> for WxError {
+    fn from(error: InvalidLength) -> Self {
+        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+    }
+}
+impl From<UnpadError> for WxError {
+    fn from(error: UnpadError) -> Self {
+        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+    }
+}
+
+impl From<FromUtf8Error> for WxError {
+    fn from(error: FromUtf8Error) -> Self {
+        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+    }
+}
+impl From<ParseIntError> for WxError {
+    fn from(error: ParseIntError) -> Self {
+        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+    }
+}
+impl From<serde_json::Error> for WxError {
+    fn from(error: serde_json::Error) -> Self {
+        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+    }
+}
+impl From<base64::DecodeError> for WxError {
+    fn from(error: base64::DecodeError) -> Self {
+        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+    }
+}
+impl From<TryFromSliceError> for WxError {
+    fn from(error: TryFromSliceError) -> Self {
+        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+    }
+}
+impl From<windows::core::Error> for WxError {
+    fn from(error: windows::core::Error) -> Self {
+        WxError { kind: Box::new(WxErrorKind::Window { error }) }
+    }
+}
+
+impl WxError {
+    pub fn custom(message: impl ToString) -> WxError {
+        WxError { kind: Box::new(WxErrorKind::Custom { message: message.to_string() }) }
+    }
+    pub fn unsupported_offset(version: &str, field: &str) -> WxError {
+        WxError { kind: Box::new(WxErrorKind::UnsupportedOffset { version: version.to_string(), field: field.to_string() }) }
+    }
+    pub fn invalid_key(key: [u8; 32], path: &Path) -> WxError {
+        WxError { kind: Box::new(WxErrorKind::InvalidKey { key, path: path.to_owned() }) }
+    }
+}

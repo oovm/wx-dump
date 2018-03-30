@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = ["projects/*"]
+default-members = [
+    "projects/wx-core",
+    "projects/wx-dump",
+]
+exclude = [
+    "projects/.DS_Store",
+]
+
+[workspace.dependencies.tokio]
+version = "1.43.0"
+
+[profile.release]
+lto = true
+panic = "abort"
