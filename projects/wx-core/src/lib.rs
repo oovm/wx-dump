@@ -8,6 +8,7 @@ mod errors;
 pub mod helpers;
 mod wx_decrypt;
 mod wx_scanner;
+mod wx_export;
 
 pub use crate::{
     errors::{WxError, WxErrorKind, WxResult},

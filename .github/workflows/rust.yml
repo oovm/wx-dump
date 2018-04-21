@@ -23,6 +23,6 @@ jobs:
             override: true
             components: rustfmt, clippy
       - name: Build
-        run: cargo build --release
+        run: cargo build
       - name: Tests
-        run: cargo test --release
+        run: cargo test
