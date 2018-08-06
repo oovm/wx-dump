@@ -42,6 +42,7 @@ features = [
 optional = true
 
 [dev-dependencies]
+tokio = { version = "1.42.0", features = ["full"] }
 
 [features]
 default = ["shell"]

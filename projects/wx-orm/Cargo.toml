@@ -1,0 +1,21 @@
+[package]
+name = "wx-orm"
+version = "0.0.0"
+authors = ["Aster <192607617@qq.com>"]
+description = "..."
+categories = ["rust-patterns"]
+homepage = "https://github.com/oovm/RustTemplate"
+repository = "https://github.com/oovm/RustTemplate"
+documentation = "https://docs.rs/sub_projects"
+readme = "readme.md"
+license = "MPL-2.0"
+edition = "2021"
+exclude = ["package.json", "tests/**"]
+
+[dependencies]
+tracing = "0.1.41"
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "fs"] }
+sqlx = { version = "0.8.2", features = ["runtime-tokio-rustls", "sqlite"] }
+
+[features]
+default = []
