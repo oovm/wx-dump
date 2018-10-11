@@ -7,7 +7,7 @@ use std::{
     ffi::OsStr,
     fs::{File,  create_dir_all},
     io::{Read, Write},
-    path::{Path, PathBuf},
+    path::{ PathBuf},
 };
 use tracing::{debug, trace};
 use url::Url;
