@@ -1,18 +1,35 @@
+use std::fmt::{Debug, Formatter};
 use crate::WxResult;
 use chrono::{DateTime, Local};
 use sqlx::{
     Error, FromRow, Row,
     sqlite::{SqlitePoolOptions, SqliteRow},
 };
+use std::path::Path;
 
-#[derive(Debug)]
 struct MessageRow {
     r#type: MessageType,
     time: DateTime<Local>,
     message: String,
+    binary: Vec<u8>,
     is_sender: bool,
+    // room_id: String,
     room_id: String,
-    user_id: String,
+    room_name: String,
+}
+
+impl Debug for MessageRow {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MessageRaw")
+            .field("type", &self.r#type)
+            .field("time", &self.time)
+            .field("message", &self.message)
+            .field("binary", &self.binary.len())
+            .field("is_sender", &self.is_sender)
+            .field("room_id", &self.room_id)
+            .field("room_name", &self.room_name)
+            .finish()
+    }
 }
 
 #[derive(Debug)]
@@ -50,12 +67,23 @@ impl<'a> FromRow<'a, SqliteRow> for MessageRow {
         let kind = (ty, sub).into();
 
         let message = row.try_get("StrContent")?;
-        let room_id = row.try_get("StrTalker")?;
-        let user_id = row.try_get("UsrName")?;
+        let binary: Vec<u8> = row.try_get("CompressContent")?;
+        let user_id = row.try_get("StrTalker")?;
+        let user_name = row.try_get("strNickName")?;
+        // let room_id = row.try_get("UsrName")?;
 
         let utc_datetime = DateTime::from_timestamp(time as i64, 0).unwrap();
         let local_datetime: DateTime<Local> = utc_datetime.with_timezone(&Local);
-        Ok(MessageRow { r#type: kind, message, time: local_datetime, is_sender, room_id, user_id })
+        Ok(MessageRow {
+            r#type: kind,
+            message,
+            time: local_datetime,
+            is_sender,
+            // room_id,
+            room_id: user_id,
+            binary,
+            room_name: user_name,
+        })
     }
 }
 
@@ -63,11 +91,14 @@ impl<'a> FromRow<'a, SqliteRow> for MessageRow {
 //
 #[tokio::test]
 async fn main() -> WxResult<()> {
-    let db = SqlitePoolOptions::new()
-        .connect(r#""#)
-        .await
-        .unwrap();
-    let out: Vec<MessageRow> = sqlx::query_as(include_str!("get_message.sql")).fetch_all(&db).await.unwrap();
+    let dir = Path::new(r#""#);
+    let micro_msg = dir.join("MicroMsg.db");
+    let msg = dir.join("Multi/MSG0.db");
+    let path = micro_msg.to_str().unwrap_or_default();
+
+    let db = SqlitePoolOptions::new();
+    let db = db.connect(&msg.to_str().unwrap_or_default()).await.unwrap();
+    let out: Vec<MessageRow> = sqlx::query_as(include_str!("get_message.sql")).bind(path).fetch_all(&db).await.unwrap();
     println!("{:#?}", out);
 
     Ok(())
