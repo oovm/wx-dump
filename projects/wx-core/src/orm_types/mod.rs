@@ -1,17 +1,21 @@
-use std::fmt::{Debug, Formatter};
-use crate::WxResult;
+use crate::{WxExport, WxResult};
 use chrono::{DateTime, Local};
 use sqlx::{
-    Error, FromRow, Row,
-    sqlite::{SqlitePoolOptions, SqliteRow},
+    sqlite::{SqlitePoolOptions, SqliteRow}, Error, FromRow,
+    Row,
 };
-use std::path::Path;
+use std::{
+    fmt::{Debug, Formatter},
+    path::PathBuf,
+};
+
 
 struct MessageRow {
     r#type: MessageType,
     time: DateTime<Local>,
     message: String,
     binary: Vec<u8>,
+    binary_extra: Vec<u8>,
     is_sender: bool,
     // room_id: String,
     room_id: String,
@@ -25,6 +29,7 @@ impl Debug for MessageRow {
             .field("time", &self.time)
             .field("message", &self.message)
             .field("binary", &self.binary.len())
+            .field("binary_extra", &self.binary_extra.len())
             .field("is_sender", &self.is_sender)
             .field("room_id", &self.room_id)
             .field("room_name", &self.room_name)
@@ -38,6 +43,8 @@ pub enum MessageType {
     Text,
     /// 图片
     Image,
+    /// 二进制文件
+    File,
     /// 未知类型
     Unknown {
         /// 类别 id
@@ -52,6 +59,7 @@ impl From<(i32, i32)> for MessageType {
         match value {
             (1, 0) => Self::Text,
             (3, 0) => Self::Image,
+            (49, 6) => Self::File,
             (x, y) => Self::Unknown { type_id: x, sub_id: y },
         }
     }
@@ -68,6 +76,7 @@ impl<'a> FromRow<'a, SqliteRow> for MessageRow {
 
         let message = row.try_get("StrContent")?;
         let binary: Vec<u8> = row.try_get("CompressContent")?;
+        let binary_extra: Vec<u8> = row.try_get("BytesExtra")?;
         let user_id = row.try_get("StrTalker")?;
         let user_name = row.try_get("strNickName")?;
         // let room_id = row.try_get("UsrName")?;
@@ -83,7 +92,21 @@ impl<'a> FromRow<'a, SqliteRow> for MessageRow {
             room_id: user_id,
             binary,
             room_name: user_name,
+            binary_extra
         })
+    }
+}
+
+impl WxExport {
+    pub async fn read(&self) -> WxResult<()> {
+        let micro_msg = self.db.join("MicroMsg.db");
+        let msg = self.db.join("Multi/MSG0.db");
+        let path = micro_msg.to_str().unwrap_or_default();
+        let db = SqlitePoolOptions::new();
+        let db = db.connect(&msg.to_str().unwrap_or_default()).await.unwrap();
+        let out: Vec<MessageRow> = sqlx::query_as(include_str!("get_message.sql")).bind(path).fetch_all(&db).await.unwrap();
+        println!("{:#?}", out);
+        Ok(())
     }
 }
 
@@ -91,15 +114,8 @@ impl<'a> FromRow<'a, SqliteRow> for MessageRow {
 //
 #[tokio::test]
 async fn main() -> WxResult<()> {
-    let dir = Path::new(r#""#);
-    let micro_msg = dir.join("MicroMsg.db");
-    let msg = dir.join("Multi/MSG0.db");
-    let path = micro_msg.to_str().unwrap_or_default();
-
-    let db = SqlitePoolOptions::new();
-    let db = db.connect(&msg.to_str().unwrap_or_default()).await.unwrap();
-    let out: Vec<MessageRow> = sqlx::query_as(include_str!("get_message.sql")).bind(path).fetch_all(&db).await.unwrap();
-    println!("{:#?}", out);
+    let wx = WxExport { db: PathBuf::from(r#""#) };
+    wx.read().await?;
 
     Ok(())
 }

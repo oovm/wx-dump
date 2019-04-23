@@ -6,13 +6,14 @@
 
 mod errors;
 pub mod helpers;
-mod wx_decrypt;
-mod wx_scanner;
-mod wx_export;
 mod orm_types;
+mod wx_decrypt;
+mod wx_export;
+mod wx_scanner;
 
 pub use crate::{
     errors::{WxError, WxErrorKind, WxResult},
     wx_decrypt::WxDecryptor,
+    wx_export::WxExport,
     wx_scanner::{WeChatProfile, WxScanner},
 };
