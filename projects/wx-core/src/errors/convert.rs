@@ -59,12 +59,17 @@ impl From<TryFromSliceError> for WxError {
         WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
     }
 }
+#[cfg(windows)]
 impl From<windows::core::Error> for WxError {
     fn from(error: windows::core::Error) -> Self {
         WxError { kind: Box::new(WxErrorKind::Window { error }) }
     }
 }
-
+impl From<sqlx::Error> for WxError {
+    fn from(error: sqlx::Error) -> Self {
+        WxError { kind: Box::new(WxErrorKind::DatabaseError { error }) }
+    }
+}
 impl WxError {
     pub fn custom(message: impl ToString) -> WxError {
         WxError { kind: Box::new(WxErrorKind::Custom { message: message.to_string() }) }

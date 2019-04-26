@@ -103,19 +103,10 @@ impl WxExport {
         let msg = self.db.join("Multi/MSG0.db");
         let path = micro_msg.to_str().unwrap_or_default();
         let db = SqlitePoolOptions::new();
-        let db = db.connect(&msg.to_str().unwrap_or_default()).await.unwrap();
+        let db = db.connect(&msg.to_str().unwrap_or_default()).await?;
         let out: Vec<MessageRow> = sqlx::query_as(include_str!("get_message.sql")).bind(path).fetch_all(&db).await.unwrap();
         println!("{:#?}", out);
         Ok(())
     }
 }
 
-// use sqlx::{query, SqlitePool};
-//
-#[tokio::test]
-async fn main() -> WxResult<()> {
-    let wx = WxExport { db: PathBuf::from(r#""#) };
-    wx.read().await?;
-
-    Ok(())
-}
