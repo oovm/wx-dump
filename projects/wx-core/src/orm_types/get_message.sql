@@ -6,5 +6,5 @@ from MSG message
          left join MicroMsg.Session room --
               on room.strUsrName = message.StrTalker
 order by Sequence desc
-limit 100
+-- limit 10
 ;

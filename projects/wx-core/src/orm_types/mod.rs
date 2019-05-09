@@ -1,14 +1,19 @@
-use crate::{WxExport, WxResult};
+use crate::{
+    WxExport, WxResult,
+    dsv_writer::{CsvLine, DsvWriter},
+};
+use async_stream::try_stream;
 use chrono::{DateTime, Local};
+use futures_util::stream::TryStreamExt;
 use sqlx::{
-    sqlite::{SqlitePoolOptions, SqliteRow}, Error, FromRow,
-    Row,
+    Error, FromRow, Row, Sqlite,
+    sqlite::{SqlitePoolOptions, SqliteRow},
 };
 use std::{
     fmt::{Debug, Formatter},
     path::PathBuf,
 };
-
+use tokio::{fs::File, io::AsyncWriteExt};
 
 struct MessageRow {
     r#type: MessageType,
@@ -92,21 +97,50 @@ impl<'a> FromRow<'a, SqliteRow> for MessageRow {
             room_id: user_id,
             binary,
             room_name: user_name,
-            binary_extra
+            binary_extra,
         })
     }
 }
 
 impl WxExport {
-    pub async fn read(&self) -> WxResult<()> {
+    pub async fn export_message(&self) -> WxResult<()> {
+        let mut file = File::create(self.db.join("MSG.csv")).await?;
+        // UTF8 HEAD for Excel
+        file.write_all(&[0xEF, 0xBB, 0xBF]).await?;
+        let mut line = CsvLine::new();
+        line.push_str("日期");
+        line.push_str("会话");
+        line.push_str("内容");
+        line.push_str("类型");
+        line.push_str("事件");
+        file.write_all(line.finish().as_bytes()).await?;
+        for id in 0..99 {
+            let db_path = self.db.join(format!("Multi/MSG{}.db", id));
+            self.export_message_on(db_path, &mut file).await?;
+        }
+        Ok(())
+    }
+    pub async fn export_message_on(&self, msg: PathBuf, file: &mut File) -> WxResult<()> {
         let micro_msg = self.db.join("MicroMsg.db");
-        let msg = self.db.join("Multi/MSG0.db");
         let path = micro_msg.to_str().unwrap_or_default();
         let db = SqlitePoolOptions::new();
         let db = db.connect(&msg.to_str().unwrap_or_default()).await?;
-        let out: Vec<MessageRow> = sqlx::query_as(include_str!("get_message.sql")).bind(path).fetch_all(&db).await.unwrap();
-        println!("{:#?}", out);
+        let mut rows = sqlx::query_as::<Sqlite, MessageRow>(include_str!("get_message.sql")).bind(path).fetch(&db);
+
+        while let Some(row) = rows.try_next().await? {
+            let mut line = CsvLine::new();
+            line.push_str(&row.time.format("%Y-%m-%d %H:%M:%S").to_string());
+            line.push_str(&row.room_name);
+            line.push_str(&row.message);
+            line.push_str(&format!("{:?}", row.r#type));
+            if row.is_sender {
+                line.push_str("发送");
+            }
+            else {
+                line.push_str("接收");
+            }
+            file.write_all(line.finish().as_bytes()).await?;
+        }
         Ok(())
     }
 }
-

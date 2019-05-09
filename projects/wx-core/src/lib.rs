@@ -10,6 +10,7 @@ mod orm_types;
 mod wx_decrypt;
 mod wx_export;
 mod wx_scanner;
+mod dsv_writer;
 
 pub use crate::{
     errors::{WxError, WxErrorKind, WxResult},
