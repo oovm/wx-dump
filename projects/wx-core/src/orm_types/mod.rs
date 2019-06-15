@@ -125,14 +125,21 @@ impl WxExport {
         let path = micro_msg.to_str().unwrap_or_default();
         let db = SqlitePoolOptions::new();
         let db = db.connect(&msg.to_str().unwrap_or_default()).await?;
-        let mut rows = sqlx::query_as::<Sqlite, MessageRow>(include_str!("get_message.sql")).bind(path).fetch(&db);
-
+        let mut rows = sqlx::query_as::<Sqlite, MessageRow>(include_str!("get_message.sql"))
+            .bind(path) //
+            .fetch(&db);
         while let Some(row) = rows.try_next().await? {
             let mut line = CsvLine::new();
             line.push_str(&row.time.format("%Y-%m-%d %H:%M:%S").to_string());
             line.push_str(&row.room_name);
             line.push_str(&row.message);
-            line.push_str(&format!("{:?}", row.r#type));
+            match row.r#type {
+                MessageType::Text => {
+                    line.push_str(&format!("{:?}", row.r#type));
+                }
+                MessageType::Unknown { .. } => {}
+                _ => continue,
+            }
             if row.is_sender {
                 line.push_str("发送");
             }
