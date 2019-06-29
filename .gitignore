@@ -12,4 +12,3 @@ time-travel.*
 # Rust
 target/
 Cargo.lock
-wx-dump/
