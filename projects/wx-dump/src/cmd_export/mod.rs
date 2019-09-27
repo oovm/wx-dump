@@ -1,4 +1,4 @@
-use crate::WxArguments;
+use crate::{DEFAULT_SAVE_DIR, WxArguments};
 use clap::Parser;
 use std::{
     env::current_dir,
@@ -19,7 +19,7 @@ impl RunExport {
         match self.path.as_ref() {
             Some(s) => self.export_db(&args, PathBuf::from(s)).await?,
             None => {
-                let dump = current_dir()?.join("wx-dump");
+                let dump = current_dir()?.join(DEFAULT_SAVE_DIR);
                 trace!("dump dir: {}", dump.display());
                 for dir in std::fs::read_dir(dump)? {
                     match dir {

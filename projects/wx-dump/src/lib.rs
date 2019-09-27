@@ -12,6 +12,8 @@ mod cmd_wx_path;
 
 mod utils;
 
+const DEFAULT_SAVE_DIR: &str = "target";
+
 pub use crate::{
     cmd_copy::RunCopy, cmd_decrypt::RunDecrypt, cmd_export::RunExport, cmd_info::RunInfo, cmd_read::RunRead,
     cmd_search::RunSearch,
@@ -87,7 +89,7 @@ impl WxDump {
         println!("{:#?}", wechat_info.profile);
         let data = read_database(&c.wechat_path).await.unwrap();
         for (user, path) in data.iter() {
-            let output_path = current_dir()?.join("wx-dump").join(user);
+            let output_path = current_dir()?.join(DEFAULT_SAVE_DIR).join(user);
             let decryptor = WxDecryptor {
                 source_path: path.to_path_buf(),
                 output_path,
@@ -104,4 +106,3 @@ impl WxDump {
         Ok(())
     }
 }
-
