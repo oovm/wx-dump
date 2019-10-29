@@ -40,6 +40,7 @@ impl WxScanner {
         let buffer = read_memory_data(self.process.th32ProcessID, self.module.modBaseAddr as usize + offset, 128)?;
         Ok(String::from_utf8_lossy(buffer.split(|n| *n == 0).next().unwrap()).to_string())
     }
+    /// 读取内存
     pub fn read_memory(&self, index: usize, len: usize, real_addr: bool) -> WxResult<Vec<u8>> {
         let process = self.process;
         let vec = if real_addr {
@@ -60,10 +61,11 @@ impl WxScanner {
             .collect();
         Ok(r)
     }
+    /// 搜索所有微信进程的内存
     pub fn search_in_all_wechat_modules(
         &self,
         data: &[u8],
-        real_address: bool,
+        absolute_address: bool,
         show_no_found_info: bool,
         show_error_info: bool,
     ) -> WxResult<()> {
@@ -74,7 +76,7 @@ impl WxScanner {
                 Ok(vec) => {
                     let r: Vec<usize> = (0..vec.len() - data.len())
                         .filter(|&i| &vec[i..i + data.len()] == data)
-                        .map(|i| if real_address { module.modBaseAddr as usize + i } else { i })
+                        .map(|i| if absolute_address { module.modBaseAddr as usize + i } else { i })
                         .collect();
                     if r.len() > 0 {
                         println!(
@@ -121,7 +123,7 @@ impl WxScanner {
         }
         Ok(())
     }
-
+    /// 搜索所有微信进程的内存
     pub fn search_in_all_wechat_data(
         &self,
         data: &[u8],
@@ -163,6 +165,7 @@ impl WxScanner {
         }
         Ok(())
     }
+    /// 打开微信进程
     pub fn open_wechat_process(
         &mut self,
         offset_map: &Option<String>,
@@ -219,6 +222,7 @@ impl WxScanner {
         Ok(())
     }
 
+    /// 获取微信进程信息
     pub fn open_wechat_process_with_out_info(
         &mut self,
         process_id: &Option<u32>,

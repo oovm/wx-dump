@@ -103,6 +103,7 @@ impl<'a> FromRow<'a, SqliteRow> for MessageRow {
 }
 
 impl WxExport {
+    /// 导出消息
     pub async fn export_message(&self) -> WxResult<()> {
         let mut file = File::create(self.db.join("MSG.csv")).await?;
         // UTF8 HEAD for Excel
@@ -120,12 +121,12 @@ impl WxExport {
         }
         Ok(())
     }
-    pub async fn export_message_on(&self, msg: PathBuf, file: &mut File) -> WxResult<()> {
+    async fn export_message_on(&self, msg: PathBuf, file: &mut File) -> WxResult<()> {
         let micro_msg = self.db.join("MicroMsg.db");
         let path = micro_msg.to_str().unwrap_or_default();
         let db = SqlitePoolOptions::new();
         let db = db.connect(&msg.to_str().unwrap_or_default()).await?;
-        let mut rows = sqlx::query_as::<Sqlite, MessageRow>(include_str!("get_message.sql"))
+        let mut rows = sqlx::query_as::<Sqlite, MessageRow>(include_str!("get_msg.sql"))
             .bind(path) //
             .fetch(&db);
         while let Some(row) = rows.try_next().await? {
@@ -137,7 +138,9 @@ impl WxExport {
                 MessageType::Text => {
                     line.push_str(&format!("{:?}", row.r#type));
                 }
-                MessageType::Unknown { .. } => {}
+                MessageType::Unknown { type_id, sub_id } => {
+                    line.push_str(&format!("{:?}", row.r#type));
+                }
                 _ => continue,
             }
             if row.is_sender {

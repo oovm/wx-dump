@@ -1,5 +1,6 @@
 use std::{borrow::Cow, fmt::Display, marker::PhantomData};
 
+/// DSV Writer
 pub struct DsvWriter {
     file_name: Cow<'static, str>,
 }
@@ -46,7 +47,15 @@ impl<F: DsvFormat> DsvLine<F> {
         Self { buffer: Default::default(), config: Default::default() }
     }
     pub fn needs_quote(&self, value: &str) -> bool {
-        value.contains(F::QUOTE) || value.contains(F::DELIMITER) || value.contains(' ')
+        for c in value.chars() {
+            if c == F::QUOTE || c == F::DELIMITER {
+                return true;
+            }
+            if c.is_whitespace() {
+                return true;
+            }
+        }
+        return false;
     }
     pub fn push_display<T>(&mut self, value: T)
     where

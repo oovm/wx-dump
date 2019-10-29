@@ -5,19 +5,21 @@ use hmac::{Hmac, Mac};
 use sha1::Sha1;
 use std::{
     ffi::OsStr,
-    fs::{File,  create_dir_all},
+    fs::{File, create_dir_all},
     io::{Read, Write},
-    path::{ PathBuf},
+    path::PathBuf,
 };
 use tracing::{debug, trace};
 use url::Url;
 use walkdir::WalkDir;
 
+/// 解密微信数据库
 #[derive(Debug)]
 pub struct WxDecryptor {
     pub source_path: PathBuf,
     pub output_path: PathBuf,
     pub key: [u8; 32],
+    /// 是否需要校验 hmac
     pub need_check_hmac: bool,
 }
 
@@ -36,15 +38,11 @@ impl WxDecryptor {
             create_dir_all(&self.output_path.join("Multi"))?;
         }
         match Url::from_file_path(&self.source_path) {
-            Ok(o) => {
-                println!("原始路径: {}", o);
-            }
+            Ok(o) => println!("原始路径: {}", o),
             Err(_) => {}
         }
         match Url::from_file_path(&self.output_path) {
-            Ok(o) => {
-                println!("解密路径: {}", o);
-            }
+            Ok(o) => println!("解密路径: {}", o),
             Err(_) => {}
         }
         for entry in WalkDir::new(&self.source_path) {
@@ -77,8 +75,7 @@ impl WxDecryptor {
         if check_hmac(first, &byte_key, &mac_salt, 1, 32)? {
             trace!("密码正确: {}", source_file);
             let pages: Vec<&[u8]> = buffer[..].chunks(4096).collect();
-
-            let mut out_file = File::create(&file_out).unwrap();
+            let mut out_file = File::create(&file_out)?;
             for (index, page) in pages.iter().enumerate() {
                 let mut decrypted_page = vec![];
                 if self.need_check_hmac {

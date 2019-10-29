@@ -20,9 +20,11 @@ pub struct WeChatProfile {
     pub aes256: [u8; 32],
 }
 
+/// 微信扫描器
 #[cfg(windows)]
 #[derive(Debug, Default)]
 pub struct WxScanner {
+    /// 微信个人数据
     pub profile: WeChatProfile,
     process: windows::Win32::System::Diagnostics::ToolHelp::PROCESSENTRY32,
     handle: windows::Win32::Foundation::HANDLE,
