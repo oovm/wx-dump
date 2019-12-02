@@ -48,8 +48,32 @@ pub enum MessageType {
     Text,
     /// 图片
     Image,
+    /// 语音
+    Voice,
+    /// 视频
+    Video,
+    /// 动画表情
+    ///
+    /// 第三方开发的表情包
+    Emoji,
     /// 二进制文件
+    ///
+    /// - `CompressContent` 中有文件名和下载链接
+    /// - `BytesExtra` 中有本地保存的路径
     File,
+    /// 分享的小程序
+    ///
+    /// - `CompressContent` 中有卡片信息
+    /// - `BytesExtra` 中有封面缓存位置
+    MiniProgram,
+    /// 系统通知
+    ///
+    /// 居中出现的那种灰色文字
+    SystemNotice,
+    /// 邀请通知
+    ///
+    /// 特别包含你邀请别人加入群聊
+    SystemInvite,
     /// 未知类型
     Unknown {
         /// 类别 id
@@ -64,7 +88,14 @@ impl From<(i32, i32)> for MessageType {
         match value {
             (1, 0) => Self::Text,
             (3, 0) => Self::Image,
+            (34, 0) => Self::Voice,
+            (43, 0) => Self::Video,
+            (47, 0) => Self::Emoji,
             (49, 6) => Self::File,
+            (49, 33) => Self::MiniProgram,
+            (49, 36) => Self::MiniProgram,
+            (10000, 0) => Self::SystemNotice,
+            (10000, 8000) => Self::SystemInvite,
             (x, y) => Self::Unknown { type_id: x, sub_id: y },
         }
     }
@@ -135,12 +166,8 @@ impl WxExport {
             line.push_str(&row.room_name);
             line.push_str(&row.message);
             match row.r#type {
-                MessageType::Text => {
-                    line.push_str(&format!("{:?}", row.r#type));
-                }
-                MessageType::Unknown { type_id, sub_id } => {
-                    line.push_str(&format!("{:?}", row.r#type));
-                }
+                MessageType::Text => line.push_str(&format!("{:?}", row.r#type)),
+                MessageType::Unknown { type_id, sub_id } => line.push_str(&format!("Unknown({type_id},{sub_id})")),
                 _ => continue,
             }
             if row.is_sender {
