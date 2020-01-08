@@ -46,6 +46,10 @@ impl Debug for MessageRow {
 pub enum MessageType {
     /// 纯文本
     Text,
+    /// 带有引用的文本消息
+    ///
+    /// 这种类型下 `StrContent` 为空，发送和引用的内容均在 `CompressContent` 中
+    TextReference,
     /// 图片
     Image,
     /// 语音
@@ -61,11 +65,15 @@ pub enum MessageType {
     /// - `CompressContent` 中有文件名和下载链接
     /// - `BytesExtra` 中有本地保存的路径
     File,
+    /// 电话
+    PhoneCall,
     /// 分享的小程序
     ///
     /// - `CompressContent` 中有卡片信息
     /// - `BytesExtra` 中有封面缓存位置
     MiniProgram,
+    /// 拍一拍
+    PatFriend,
     /// 系统通知
     ///
     /// 居中出现的那种灰色文字
@@ -94,6 +102,8 @@ impl From<(i32, i32)> for MessageType {
             (49, 6) => Self::File,
             (49, 33) => Self::MiniProgram,
             (49, 36) => Self::MiniProgram,
+            (49, 57) => Self::TextReference,
+            (50, 0) => Self::PhoneCall,
             (10000, 0) => Self::SystemNotice,
             (10000, 8000) => Self::SystemInvite,
             (x, y) => Self::Unknown { type_id: x, sub_id: y },
@@ -164,10 +174,25 @@ impl WxExport {
             let mut line = CsvLine::new();
             line.push_str(&row.time.format("%Y-%m-%d %H:%M:%S").to_string());
             line.push_str(&row.room_name);
-            line.push_str(&row.message);
+
+
             match row.r#type {
-                MessageType::Text => line.push_str(&format!("{:?}", row.r#type)),
-                MessageType::Unknown { type_id, sub_id } => line.push_str(&format!("Unknown({type_id},{sub_id})")),
+                MessageType::Text => {
+                    line.push_str(&row.message);
+                    line.push_str("Text");
+                },
+                MessageType::TextReference => {
+                    line.push_str(&format!("{:?}", row.binary));
+                    line.push_str("TextReference")
+                },
+                MessageType::PatFriend => {
+                    line.push_str(&row.message);
+                    line.push_str("PatFriend")
+                },
+                MessageType::Unknown { type_id, sub_id } => {
+                    line.push_str(&row.message);
+                    line.push_str(&format!("Unknown({type_id},{sub_id})"))
+                },
                 _ => continue,
             }
             if row.is_sender {
