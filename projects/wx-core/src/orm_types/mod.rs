@@ -60,6 +60,11 @@ pub enum MessageType {
     ///
     /// 第三方开发的表情包
     Emoji,
+    /// GIF 表情
+    ///
+    /// 用户上传的表情包
+    /// - `CompressContent` 中有 CDN 链接
+    EmojiGif,
     /// 二进制文件
     ///
     /// - `CompressContent` 中有文件名和下载链接
@@ -100,6 +105,7 @@ impl From<(i32, i32)> for MessageType {
             (43, 0) => Self::Video,
             (47, 0) => Self::Emoji,
             (49, 6) => Self::File,
+            (49, 8) => Self::EmojiGif,
             (49, 33) => Self::MiniProgram,
             (49, 36) => Self::MiniProgram,
             (49, 57) => Self::TextReference,
@@ -175,24 +181,23 @@ impl WxExport {
             line.push_str(&row.time.format("%Y-%m-%d %H:%M:%S").to_string());
             line.push_str(&row.room_name);
 
-
             match row.r#type {
                 MessageType::Text => {
                     line.push_str(&row.message);
                     line.push_str("Text");
-                },
+                }
                 MessageType::TextReference => {
-                    line.push_str(&format!("{:?}", row.binary));
+                    line.push_str(&String::from_utf8_lossy(&row.binary));
                     line.push_str("TextReference")
-                },
+                }
                 MessageType::PatFriend => {
                     line.push_str(&row.message);
                     line.push_str("PatFriend")
-                },
+                }
                 MessageType::Unknown { type_id, sub_id } => {
                     line.push_str(&row.message);
                     line.push_str(&format!("Unknown({type_id},{sub_id})"))
-                },
+                }
                 _ => continue,
             }
             if row.is_sender {
