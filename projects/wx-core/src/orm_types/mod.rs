@@ -5,6 +5,7 @@ use crate::{
 use async_stream::try_stream;
 use chrono::{DateTime, Local};
 use futures_util::stream::TryStreamExt;
+use lz4_flex::{block::DecompressError, decompress, decompress_size_prepended};
 use sqlx::{
     Error, FromRow, Row, Sqlite,
     sqlite::{SqlitePoolOptions, SqliteRow},
@@ -12,6 +13,7 @@ use sqlx::{
 use std::{
     fmt::{Debug, Formatter},
     path::PathBuf,
+    string::FromUtf8Error,
 };
 use tokio::{fs::File, io::AsyncWriteExt};
 
@@ -20,7 +22,7 @@ struct MessageRow {
     time: DateTime<Local>,
     message: String,
     binary: Vec<u8>,
-    binary_extra: Vec<u8>,
+    extra: Vec<u8>,
     is_sender: bool,
     // room_id: String,
     room_id: String,
@@ -34,11 +36,20 @@ impl Debug for MessageRow {
             .field("time", &self.time)
             .field("message", &self.message)
             .field("binary", &self.binary.len())
-            .field("binary_extra", &self.binary_extra.len())
+            .field("binary_extra", &self.extra.len())
             .field("is_sender", &self.is_sender)
             .field("room_id", &self.room_id)
             .field("room_name", &self.room_name)
             .finish()
+    }
+}
+
+impl MessageRow {
+    pub fn binary_as_string(&self) -> WxResult<String> {
+        let mut decompress = decompress(&self.binary, 0x10004)?;
+        // 移除字符串末尾的 `<NULL>`
+        debug_assert_eq!(decompress.pop(), Some(0x00));
+        Ok(String::from_utf8(decompress)?)
     }
 }
 
@@ -144,7 +155,7 @@ impl<'a> FromRow<'a, SqliteRow> for MessageRow {
             room_id: user_id,
             binary,
             room_name: user_name,
-            binary_extra,
+            extra: binary_extra,
         })
     }
 }
@@ -187,7 +198,7 @@ impl WxExport {
                     line.push_str("Text");
                 }
                 MessageType::TextReference => {
-                    line.push_str(&String::from_utf8_lossy(&row.binary));
+                    line.push_str(&row.binary_as_string().unwrap_or_else(|e| e.to_string()));
                     line.push_str("TextReference")
                 }
                 MessageType::PatFriend => {

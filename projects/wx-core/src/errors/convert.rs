@@ -1,5 +1,6 @@
 use super::*;
 use aes::cipher::{InvalidLength, block_padding::UnpadError};
+use lz4_flex::block::DecompressError;
 use std::{
     array::TryFromSliceError,
     num::ParseIntError,
@@ -57,6 +58,11 @@ impl From<base64::DecodeError> for WxError {
 impl From<TryFromSliceError> for WxError {
     fn from(error: TryFromSliceError) -> Self {
         WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+    }
+}
+impl From<DecompressError> for WxError {
+    fn from(error: DecompressError) -> Self {
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "lz4", message: error.to_string() }) }
     }
 }
 #[cfg(windows)]

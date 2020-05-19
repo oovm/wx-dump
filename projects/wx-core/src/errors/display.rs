@@ -22,6 +22,7 @@ impl Display for WxErrorKind {
             Self::Window { error } => write!(f, "系统错误: {}", error),
             Self::InvalidKey { key: _, path } => write!(f, "秘钥不匹配, 无法解密 {}", path.display()),
             Self::DatabaseError { error } => write!(f, "数据库错误: {}", error),
+            Self::DecodeError { algorithm, message } => write!(f, "{} 解码错误: {}", algorithm, message),
         }
     }
 }

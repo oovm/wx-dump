@@ -41,6 +41,13 @@ pub enum WxErrorKind {
     DatabaseError {
         error: sqlx::Error,
     },
+    /// 解码失败
+    DecodeError {
+        /// 解码算法
+        algorithm: &'static str,
+        /// 错误消息
+        message: String,
+    },
     /// 自定义报错
     Custom {
         /// 报错信息
