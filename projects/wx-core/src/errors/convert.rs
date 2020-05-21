@@ -20,44 +20,44 @@ impl From<std::io::Error> for WxError {
 }
 impl From<StripPrefixError> for WxError {
     fn from(error: StripPrefixError) -> Self {
-        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "StripPrefix", message: error.to_string() }) }
     }
 }
 
 impl From<InvalidLength> for WxError {
     fn from(error: InvalidLength) -> Self {
-        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "InvalidLength", message: error.to_string() }) }
     }
 }
 impl From<UnpadError> for WxError {
     fn from(error: UnpadError) -> Self {
-        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "Unpad", message: error.to_string() }) }
     }
 }
 
 impl From<FromUtf8Error> for WxError {
     fn from(error: FromUtf8Error) -> Self {
-        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "utf8", message: error.to_string() }) }
     }
 }
 impl From<ParseIntError> for WxError {
     fn from(error: ParseIntError) -> Self {
-        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "i64", message: error.to_string() }) }
     }
 }
 impl From<serde_json::Error> for WxError {
     fn from(error: serde_json::Error) -> Self {
-        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "json", message: error.to_string() }) }
     }
 }
 impl From<base64::DecodeError> for WxError {
     fn from(error: base64::DecodeError) -> Self {
-        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "base64", message: error.to_string() }) }
     }
 }
 impl From<TryFromSliceError> for WxError {
     fn from(error: TryFromSliceError) -> Self {
-        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "[u8]", message: error.to_string() }) }
     }
 }
 impl From<DecompressError> for WxError {
