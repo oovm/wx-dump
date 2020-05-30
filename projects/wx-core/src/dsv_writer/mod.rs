@@ -1,10 +1,11 @@
 use std::{borrow::Cow, fmt::Display, marker::PhantomData};
 
-/// DSV Writer
+/// DSV 编码器
 pub struct DsvWriter {
     file_name: Cow<'static, str>,
 }
 impl DsvWriter {
+    /// 新建一个 DSV 编码器
     pub fn new<T>(name: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -55,7 +56,7 @@ impl<F: DsvFormat> DsvLine<F> {
                 return true;
             }
         }
-        return false;
+        false
     }
     pub fn push_display<T>(&mut self, value: T)
     where

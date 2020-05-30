@@ -1,11 +1,11 @@
 use crate::{
     WxExport, WxResult,
-    dsv_writer::{CsvLine, DsvWriter},
+    dsv_writer::{CsvLine, },
 };
-use async_stream::try_stream;
+
 use chrono::{DateTime, Local};
 use futures_util::stream::TryStreamExt;
-use lz4_flex::{block::DecompressError, decompress, decompress_size_prepended};
+use lz4_flex::{ decompress, };
 use sqlx::{
     Error, FromRow, Row, Sqlite,
     sqlite::{SqlitePoolOptions, SqliteRow},
@@ -13,15 +13,16 @@ use sqlx::{
 use std::{
     fmt::{Debug, Formatter},
     path::PathBuf,
-    string::FromUtf8Error,
+
 };
 use tokio::{fs::File, io::AsyncWriteExt};
 
+#[allow(non_snake_case)]
 struct MessageRow {
     r#type: MessageType,
     time: DateTime<Local>,
     message: String,
-    binary: Vec<u8>,
+    CompressContent: Vec<u8>,
     extra: Vec<u8>,
     is_sender: bool,
     // room_id: String,
@@ -35,7 +36,7 @@ impl Debug for MessageRow {
             .field("type", &self.r#type)
             .field("time", &self.time)
             .field("message", &self.message)
-            .field("binary", &self.binary.len())
+            .field("CompressContent", &self.CompressContent.len())
             .field("binary_extra", &self.extra.len())
             .field("is_sender", &self.is_sender)
             .field("room_id", &self.room_id)
@@ -46,10 +47,16 @@ impl Debug for MessageRow {
 
 impl MessageRow {
     pub fn binary_as_string(&self) -> WxResult<String> {
-        let mut decompress = decompress(&self.binary, 0x10004)?;
-        // 移除字符串末尾的 `<NULL>`
-        debug_assert_eq!(decompress.pop(), Some(0x00));
+        let mut decompress = decompress(&self.CompressContent, 0x10004)?;
+        // 移除字符串末尾的 `<NUL>`
+        let tail = decompress.pop();
+        debug_assert_eq!(tail, Some(0x00));
         Ok(String::from_utf8(decompress)?)
+    }
+    /// 将 `CompressContent` 字段转为 `ReferenceText` 格式
+    pub fn binary_as_message(&self) -> WxResult<String> {
+        let xml = self.binary_as_string()?;
+        Ok(xml)
     }
 }
 
@@ -153,7 +160,7 @@ impl<'a> FromRow<'a, SqliteRow> for MessageRow {
             is_sender,
             // room_id,
             room_id: user_id,
-            binary,
+            CompressContent: binary,
             room_name: user_name,
             extra: binary_extra,
         })
@@ -198,7 +205,7 @@ impl WxExport {
                     line.push_str("Text");
                 }
                 MessageType::TextReference => {
-                    line.push_str(&row.binary_as_string().unwrap_or_else(|e| e.to_string()));
+                    line.push_str(&row.binary_as_message().unwrap_or_else(|e| e.to_string()));
                     line.push_str("TextReference")
                 }
                 MessageType::PatFriend => {
