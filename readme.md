@@ -8,6 +8,13 @@
 
 直接双击即可, 会将当前登录用户的数据库解密放到同路径下
 
+或者使用命令行安装:
+
+```sh
+cargo install wx-dump
+wxdump --help
+```
+
 ## 指令
 
 ```yaml

@@ -2,11 +2,11 @@
 name = "wx-core"
 version = "0.0.0"
 authors = ["Aster <192607617@qq.com>"]
-description = "..."
+description = "微信数据解析工具"
 categories = ["rust-patterns"]
-homepage = "https://github.com/oovm/RustTemplate"
-repository = "https://github.com/oovm/RustTemplate"
-documentation = "https://docs.rs/sub_projects"
+homepage = "https://github.com/oovm/wx-dump/tree/dev/projects/wx-core"
+repository = "https://github.com/oovm/wx-dump"
+documentation = "https://docs.rs/wx-dump"
 readme = "readme.md"
 license = "MPL-2.0"
 edition = "2021"
