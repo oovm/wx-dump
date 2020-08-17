@@ -2,6 +2,10 @@ use std::fmt::{Debug, Formatter};
 
 #[cfg(windows)]
 mod on_windows;
+#[cfg(target_os = "macos")]
+mod on_macos;
+#[cfg(target_os = "linux")]
+mod on_linux;
 
 /// 微信个人数据
 #[derive(Default)]
@@ -29,6 +33,21 @@ pub struct WxScanner {
     process: windows::Win32::System::Diagnostics::ToolHelp::PROCESSENTRY32,
     handle: windows::Win32::Foundation::HANDLE,
     module: windows::Win32::System::Diagnostics::ToolHelp::MODULEENTRY32,
+}
+
+#[cfg(target_os = "macos")]
+#[derive(Debug, Default)]
+pub struct WxScanner {
+    /// 微信个人数据
+    pub profile: WeChatProfile,
+}
+
+
+#[cfg(target_os = "linux")]
+#[derive(Debug, Default)]
+pub struct WxScanner {
+    /// 微信个人数据
+    pub profile: WeChatProfile,
 }
 
 impl Debug for WeChatProfile {
