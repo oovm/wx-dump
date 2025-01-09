@@ -5,7 +5,8 @@ use lz4_flex::decompress;
 use quick_xml::de::from_str;
 use serde::Deserialize;
 use sqlx::{FromRow, Pool, Sqlite};
-use std::{fmt::Debug, path::Path};
+use std::{fmt::Debug, path::Path, str::FromStr};
+use xmltree::{Element, ParseError};
 
 pub mod message_type;
 
@@ -31,6 +32,28 @@ pub struct MessageData {
 pub struct RevokeMessage {
     #[serde(rename = "$value")]
     field: String,
+}
+pub struct VoIPBubbleMessage {
+    root: Element,
+}
+impl VoIPBubbleMessage {
+    pub fn get_message(&self) -> Option<&str> {
+        // <voipmsg/>
+        let x = self.root.children.get(0)?;
+        // <VoIPBubbleMsg/>
+        let x = x.as_element()?;
+        // <msg/>
+        let a = x.get_child("msg")?;
+        Some(a.children.get(0)?.as_cdata()?)
+    }
+}
+
+impl FromStr for VoIPBubbleMessage {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        Ok(Self { root: Element::parse(s.as_bytes())? })
+    }
 }
 
 impl MessageData {
@@ -72,6 +95,10 @@ impl MessageData {
         let xml = self.binary_as_string()?;
         let message: RevokeMessage = from_str(&self.StrContent)?;
         Ok(message.field)
+    }
+    /// 语音通话
+    pub fn voip_bubble_message(&self) -> WxResult<VoIPBubbleMessage> {
+        Ok(VoIPBubbleMessage::from_str(&self.StrContent)?)
     }
     pub fn unix_time(&self) -> i64 {
         // UTC+8

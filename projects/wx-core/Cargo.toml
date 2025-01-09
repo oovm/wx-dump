@@ -33,6 +33,7 @@ lz4_flex = "0.11.3"
 rust_xlsxwriter = { version = "0.80.0", features = ["constant_memory", "chrono"] }
 quick-xml = { version = "0.37.1", features = ["serialize"] }
 serde = { version = "1.0.217", features = ["derive"] }
+xmltree = "0.11.0"
 
 [dependencies.windows]
 version = "0.59.0"
@@ -48,6 +49,7 @@ features = [
 optional = true
 
 [dev-dependencies]
+anyhow = "1.0.95"
 tokio = { version = "1.42.0", features = ["full"] }
 
 [features]

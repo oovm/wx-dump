@@ -88,6 +88,11 @@ impl From<DeError> for WxError {
         WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "xml", message: error.to_string() }) }
     }
 }
+impl From<xmltree::ParseError> for WxError {
+    fn from(error: xmltree::ParseError) -> Self {
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "xml", message: error.to_string() }) }
+    }
+}
 impl WxError {
     /// 自定义错误
     pub fn custom(message: impl ToString) -> WxError {
