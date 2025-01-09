@@ -9,6 +9,7 @@ use std::{
 };
 use quick_xml::DeError;
 use rust_xlsxwriter::XlsxError;
+use sxd_xpath::ExecutionError;
 
 impl From<WxErrorKind> for WxError {
     fn from(value: WxErrorKind) -> Self {
@@ -93,6 +94,23 @@ impl From<xmltree::ParseError> for WxError {
         WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "xml", message: error.to_string() }) }
     }
 }
+impl From<sxd_xpath::ParserError> for WxError {
+    fn from(error: sxd_xpath::ParserError) -> Self {
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "xpath", message: error.to_string() }) }
+    }
+}
+impl From<ExecutionError> for WxError {
+    fn from(error: ExecutionError) -> Self {
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "xpath", message: error.to_string() }) }
+    }
+}
+
+impl From<sxd_document::parser::Error> for WxError {
+    fn from(error: sxd_document::parser::Error) -> Self {
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "xml", message: error.to_string() }) }
+    }
+}
+
 impl WxError {
     /// 自定义错误
     pub fn custom(message: impl ToString) -> WxError {

@@ -1,4 +1,5 @@
 #![doc = "辅助函数"]
+pub use self::lazy_xml::LazyXML;
 use crate::{WxError, WxResult};
 use std::{
     collections::BTreeMap,
@@ -6,6 +7,8 @@ use std::{
     path::{Path, PathBuf},
 };
 use url::Url;
+
+mod lazy_xml;
 
 /// 获取微信主目录
 pub fn get_wechat_path(given: &Option<String>) -> WxResult<PathBuf> {
