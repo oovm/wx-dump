@@ -4,6 +4,7 @@ use std::str::FromStr;
 use sxd_document::Package;
 use sxd_xpath::{Context, Factory, Value};
 
+/// A lazy XML parser.
 pub struct LazyXML {
     factory: Factory,
     package: Package,
