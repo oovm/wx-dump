@@ -7,7 +7,7 @@ pub struct RunDecrypt {
     /// 获取到的 key
     #[arg(short, long)]
     pub key: Option<String>,
-    /// key的编码格式，可选值：[hex,base64,string]
+    /// key的编码格式，可选值: [hex,base64,string]
     #[arg(short = 'd', long, default_value = "hex")]
     pub encode: String,
     #[arg(long, default_value = "false")]

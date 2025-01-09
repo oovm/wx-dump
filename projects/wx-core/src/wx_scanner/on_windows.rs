@@ -91,7 +91,7 @@ impl WxScanner {
                     else {
                         if show_no_found_info {
                             println!(
-                                "在 {} 中未找到想要搜索的数据。开始位置：{},结束位置：{}, 长度：{}, vec 长度：{}",
+                                "在 {} 中未找到想要搜索的数据。开始位置: {},结束位置: {}, 长度: {}, vec 长度: {}",
                                 String::from_utf8(
                                     module.szModule.split(|n| *n == 0).next().unwrap().iter().map(|i| *i as u8).collect()
                                 )?,
@@ -147,7 +147,7 @@ impl WxScanner {
                     else {
                         if show_no_found_info {
                             println!(
-                                "未找到想要搜索的数据。开始位置：{},结束位置：{}, 长度：{}, vec 长度：{}",
+                                "未找到想要搜索的数据。开始位置: {},结束位置: {}, 长度: {}, vec 长度: {}",
                                 base_addr,
                                 base_addr + size,
                                 size,
@@ -202,7 +202,7 @@ impl WxScanner {
         let offset_map_map: HashMap<String, Vec<usize>> = serde_json::de::from_str(&buf)?;
         let offsets = offset_map_map
             .get(&self.profile.version)
-            .ok_or(WxError::custom(format!("微信版本为：{}，未找到该版本的偏移量", self.profile.version)))?;
+            .ok_or(WxError::custom(format!("微信版本为: {}，未找到该版本的偏移量", self.profile.version)))?;
         match self.read_string(offsets.get(0), "nick_name") {
             Ok(s) => self.profile.nick_name = s,
             Err(e) => error!("{}", e),

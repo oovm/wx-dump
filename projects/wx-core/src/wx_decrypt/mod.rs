@@ -37,10 +37,7 @@ impl WxDecryptor {
                 )));
             }
         }
-        else {
-            // create_dir_all(&self.output_path)?;
-            create_dir_all(&self.output_path.join("Multi"))?;
-        }
+        create_dir_all(&self.output_path.join("Multi"))?;
         url_display(&self.source_path, |url| println!("原始路径: {}", url));
         url_display(&self.output_path, |url| println!("保存路径: {}", url));
         for entry in WalkDir::new(&self.source_path) {

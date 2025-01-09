@@ -1,8 +1,10 @@
-use crate::{MessageType, WxResult, XlsxWriter, orm_types::MessageRow};
+use crate::{MessageType, WxResult, XlsxWriter, orm_types::MessageData};
 use futures_util::TryStreamExt;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::path::PathBuf;
-use tracing::trace;
+use rust_xlsxwriter::ExcelDateTime;
+use tracing::{error, trace};
+use crate::helpers::url_display;
 
 /// 导出微信数据库中的数据
 #[derive(Debug)]
@@ -25,6 +27,7 @@ impl WxExport {
             return Ok(());
         }
         let mut excel = XlsxWriter::default();
+        excel.write_title("消息ID", 30.0)?;
         excel.write_title("日期", 30.0)?;
         excel.write_title("群ID", 30.0)?;
         excel.write_title("群名", 30.0)?;
@@ -36,20 +39,24 @@ impl WxExport {
             trace!("读取聊天记录: {}", db_path.display());
             match self.export_message_on(db_path, &mut excel).await {
                 Ok(_) => continue,
-                Err(_) => break,
+                Err(e) => {
+                    error!("读取聊天记录失败: {}", e);
+                    break
+                },
             }
         }
         let msg = self.dir.join("MSG.xlsx");
-        println!("写入聊天记录: {}", msg.display());
+        url_display(&msg, |url| println!("写入聊天记录: {}", url));
         Ok(excel.save(&msg)?)
     }
     async fn export_message_on(&self, msg: PathBuf, w: &mut XlsxWriter) -> WxResult<()> {
         let db = SqlitePoolOptions::new();
         let db = db.connect(&msg.to_str().unwrap_or_default()).await?;
-        let mut rows = MessageRow::query(&db, &self.dir);
+        let mut rows = MessageData::query(&db, &self.dir);
         while let Some(row) = rows.try_next().await? {
             w.next_line();
-            w.write_data(row.excel_time())?;
+            w.write_data(row.message_id())?;
+            w.write_time(row.unix_time())?;
             w.write_data(row.room_id())?;
             w.write_data(row.room_name())?;
             match row.get_type() {

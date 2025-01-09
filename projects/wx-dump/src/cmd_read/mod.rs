@@ -10,7 +10,7 @@ pub struct RunRead {
     /// 想要获取的值的长度
     #[arg(short, long)]
     len: usize,
-    /// 返回值的的编码格式，可选值：[hex, base64, string, u64be, u64le, u32be, u32le, u16be, u16le, i64be, i64le, i32be, i32le, i164be, i16le]
+    /// 返回值的的编码格式，可选值: [hex, base64, string, u64be, u64le, u32be, u32le, u16be, u16le, i64be, i64le, i32be, i32le, i164be, i16le]
     #[arg(short = 'd', long)]
     encode: Option<String>,
     /// offset 为真实地址

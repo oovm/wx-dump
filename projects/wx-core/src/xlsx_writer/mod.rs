@@ -1,4 +1,4 @@
-use rust_xlsxwriter::{IntoExcelData, Workbook, Worksheet, XlsxError};
+use rust_xlsxwriter::{ExcelDateTime, Format, IntoExcelData, Workbook, Worksheet, XlsxError};
 use std::{
     fmt::{Debug, Formatter},
     ops::AddAssign,
@@ -15,10 +15,7 @@ pub struct XlsxWriter {
 
 impl Debug for XlsxWriter {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("XlsxWriter")
-            .field("line", &self.current_line)
-            .field("column", &self.current_column)
-            .finish()
+        f.debug_struct("XlsxWriter").field("line", &self.current_line).field("column", &self.current_column).finish()
     }
 }
 
@@ -43,6 +40,14 @@ impl XlsxWriter {
         self.current_column.add_assign(1);
         Ok(())
     }
+    pub fn write_time(&mut self, data: i64) -> Result<(), XlsxError> {
+        let format1 = Format::new().set_num_format("yyyy年mm月dd日 hh:mm:ss");
+        let time = ExcelDateTime::from_timestamp(data)?;
+        self.table.write_with_format(self.current_line, self.current_column, time, &format1)?;
+        self.current_column.add_assign(1);
+        Ok(())
+    }
+
     /// 保存
     pub fn save(self, path: &Path) -> Result<(), XlsxError> {
         let Self { mut db, table, .. } = self;
