@@ -1,12 +1,10 @@
 #![allow(non_snake_case, missing_docs)]
-use crate::WxResult;
+use crate::{WxError, WxResult, helpers::LazyXML};
 use futures_util::stream::BoxStream;
 use lz4_flex::decompress;
-use quick_xml::de::from_str;
 use serde::Deserialize;
 use sqlx::{FromRow, Pool, Sqlite};
 use std::{fmt::Debug, path::Path, str::FromStr};
-use xmltree::{Element, ParseError};
 
 pub mod message_type;
 
@@ -28,32 +26,11 @@ pub struct MessageData {
 /// 撤回的消息
 ///
 /// `<revokemsg>"某人" 撤回了一条消息</revokemsg>`
-#[derive(Debug, Deserialize)]
 pub struct RevokeMessage {
-    #[serde(rename = "$value")]
-    field: String,
+    xml: LazyXML,
 }
 pub struct VoIPBubbleMessage {
-    root: Element,
-}
-impl VoIPBubbleMessage {
-    pub fn get_message(&self) -> Option<&str> {
-        // <voipmsg/>
-        let x = self.root.children.get(0)?;
-        // <VoIPBubbleMsg/>
-        let x = x.as_element()?;
-        // <msg/>
-        let a = x.get_child("msg")?;
-        Some(a.children.get(0)?.as_cdata()?)
-    }
-}
-
-impl FromStr for VoIPBubbleMessage {
-    type Err = ParseError;
-
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        Ok(Self { root: Element::parse(s.as_bytes())? })
-    }
+    xml: LazyXML,
 }
 
 impl MessageData {
@@ -92,13 +69,15 @@ impl MessageData {
     }
     /// 撤回消息
     pub fn revoke_message(&self) -> WxResult<String> {
-        let xml = self.binary_as_string()?;
-        let message: RevokeMessage = from_str(&self.StrContent)?;
-        Ok(message.field)
+        let xml = RevokeMessage { xml: LazyXML::from_str(&self.StrContent)? };
+        let value = xml.xml.get_xpath("/revokemsg")?;
+        Ok(value.into_string())
     }
     /// 语音通话
-    pub fn voip_bubble_message(&self) -> WxResult<VoIPBubbleMessage> {
-        Ok(VoIPBubbleMessage::from_str(&self.StrContent)?)
+    pub fn voip_bubble_message(&self) -> WxResult<String> {
+        let xml = VoIPBubbleMessage { xml: LazyXML::from_str(&self.StrContent)? };
+        let value = xml.xml.get_xpath("/voipmsg/VoIPBubbleMsg/msg/text()")?;
+        Ok(value.into_string())
     }
     pub fn unix_time(&self) -> i64 {
         // UTC+8

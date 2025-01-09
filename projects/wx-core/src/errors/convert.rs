@@ -7,7 +7,6 @@ use std::{
     path::{Path, StripPrefixError},
     string::FromUtf8Error,
 };
-use quick_xml::DeError;
 use rust_xlsxwriter::XlsxError;
 use sxd_xpath::ExecutionError;
 
@@ -84,16 +83,7 @@ impl From<XlsxError> for WxError {
         WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "xlsx", message: error.to_string() }) }
     }
 }
-impl From<DeError> for WxError {
-    fn from(error: DeError) -> Self {
-        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "xml", message: error.to_string() }) }
-    }
-}
-impl From<xmltree::ParseError> for WxError {
-    fn from(error: xmltree::ParseError) -> Self {
-        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "xml", message: error.to_string() }) }
-    }
-}
+
 impl From<sxd_xpath::ParserError> for WxError {
     fn from(error: sxd_xpath::ParserError) -> Self {
         WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "xpath", message: error.to_string() }) }

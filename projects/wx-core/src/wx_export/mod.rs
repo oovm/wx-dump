@@ -62,10 +62,7 @@ impl WxExport {
                 MessageType::TextReference => w.write_data(row.text_reference())?,
                 MessageType::FriendPatPat => w.write_data(row.text())?,
                 MessageType::Revoke => w.write_data(row.revoke_message())?,
-                MessageType::PhoneCall => {
-                    let voip = row.voip_bubble_message()?;
-                    w.write_data(voip.get_message().unwrap_or_default())?
-                }
+                MessageType::PhoneCall => w.write_data(row.voip_bubble_message())?,
                 MessageType::Unknown { .. } => w.write_data(row.text())?,
                 _ => w.write_data(row.text())?,
             }

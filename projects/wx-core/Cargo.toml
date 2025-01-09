@@ -31,9 +31,9 @@ sqlx = { version = "0.8.2", features = ["runtime-tokio-rustls", "sqlite"] }
 futures-util = "0.3.31"
 lz4_flex = "0.11.3"
 rust_xlsxwriter = { version = "0.80.0", features = ["constant_memory", "chrono"] }
-quick-xml = { version = "0.37.1", features = ["serialize"] }
 serde = { version = "1.0.217", features = ["derive"] }
-xmltree = "0.11.0"
+sxd-document = "0.3.2"
+sxd-xpath = "0.4.2"
 
 [dependencies.windows]
 version = "0.59.0"
