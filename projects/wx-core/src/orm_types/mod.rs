@@ -178,7 +178,10 @@ impl WxExport {
             let db_path = self.db.join(format!("Multi/MSG{}.db", id));
             match self.export_message_on(db_path, &mut excel).await {
                 Ok(_) => {}
-                Err(_) => break,
+                Err(e) => {
+                    println!("{e}");
+                    break
+                },
             }
         }
         Ok(excel.save(&self.db.join("MSG.xlsx"))?)
@@ -201,7 +204,7 @@ impl WxExport {
                     w.write_data(3, "Text")?;
                 }
                 MessageType::TextReference => {
-                    w.write_data(2, row.binary_as_message().unwrap_or_else(|e| e.to_string()))?;
+                    w.write_data(2, row.binary_as_message())?;
                     w.write_data(3, "TextReference")?;
                 }
                 MessageType::PatFriend => {

@@ -1,4 +1,5 @@
 use super::*;
+use rust_xlsxwriter::{ Format, IntoExcelData,  Worksheet, XlsxError};
 
 impl Error for WxError {}
 
@@ -25,5 +26,15 @@ impl Display for WxErrorKind {
             Self::DatabaseError { error } => write!(f, "数据库错误: {}", error),
             Self::DecodeError { algorithm, message } => write!(f, "{} 解码错误: {}", algorithm, message),
         }
+    }
+}
+
+impl IntoExcelData for WxError {
+    fn write(self, worksheet: &mut Worksheet, row: u32, col: u16) -> Result<&mut Worksheet, XlsxError> {
+        worksheet.write_string(row, col, &self.to_string())
+    }
+
+    fn write_with_format<'a>(self, ws: &'a mut Worksheet, r: u32, c: u16, f: &Format) -> Result<&'a mut Worksheet, XlsxError> {
+        ws.write_string_with_format(r, c, &self.to_string(), f)
     }
 }
