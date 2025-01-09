@@ -19,3 +19,11 @@ impl<'c> Decode<'c, Sqlite> for MsgBytesExtra {
         Ok(<MsgBytesExtra as Message>::decode(blob)?)
     }
 }
+
+impl MsgBytesExtra {
+    pub fn pop_sender(&mut self) -> Option<String> {
+        let index = self.string.iter().position(|s| s.r#type == 1)?;
+        let item = self.string.remove(index);
+        Some(item.message)
+    }
+}
