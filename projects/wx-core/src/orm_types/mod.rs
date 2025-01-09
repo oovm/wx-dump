@@ -58,7 +58,8 @@ impl MessageData {
         Ok(xml)
     }
     pub fn unix_time(&self) -> i64 {
-        self.CreateTime
+        // UTC+8
+        self.CreateTime + 8 * 60 * 60 * 1000
     }
     pub fn is_sender(&self) -> bool {
         self.IsSender == 1

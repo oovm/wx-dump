@@ -41,9 +41,9 @@ impl XlsxWriter {
         Ok(())
     }
     pub fn write_time(&mut self, data: i64) -> Result<(), XlsxError> {
-        let format1 = Format::new().set_num_format("yyyy年mm月dd日 hh:mm:ss");
         let time = ExcelDateTime::from_timestamp(data)?;
-        self.table.write_with_format(self.current_line, self.current_column, time, &format1)?;
+        let format = Format::new().set_num_format("yyyy年mm月dd日 hh:mm:ss");
+        self.table.write_with_format(self.current_line, self.current_column, time, &format)?;
         self.current_column.add_assign(1);
         Ok(())
     }
