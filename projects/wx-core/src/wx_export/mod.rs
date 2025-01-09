@@ -1,9 +1,8 @@
-use crate::{MessageType, WxResult, XlsxWriter, orm_types::MessageData};
+use crate::{MessageType, WxResult, XlsxWriter, helpers::url_display, orm_types::MessageData};
 use futures_util::TryStreamExt;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::path::PathBuf;
 use tracing::{error, trace};
-use crate::helpers::url_display;
 
 /// 导出微信数据库中的数据
 #[derive(Debug)]
@@ -40,8 +39,8 @@ impl WxExport {
                 Ok(_) => continue,
                 Err(e) => {
                     error!("读取聊天记录失败: {}", e);
-                    break
-                },
+                    break;
+                }
             }
         }
         let msg = self.dir.join("MSG.xlsx");
@@ -67,7 +66,7 @@ impl WxExport {
                     w.write_data(row.text_reference())?;
                     w.write_data("TextReference")?;
                 }
-                MessageType::PatFriend => {
+                MessageType::FriendPatPat => {
                     w.write_data(row.text())?;
                     w.write_data("PatFriend")?;
                 }
@@ -75,7 +74,10 @@ impl WxExport {
                     w.write_data(row.text())?;
                     w.write_data(format!("Unknown({type_id},{sub_id})"))?;
                 }
-                _ => continue,
+                _ => {
+                    w.write_data("")?;
+                    w.write_data(row.get_type())?;
+                }
             }
             if row.is_sender() {
                 w.write_data("发送")?;
