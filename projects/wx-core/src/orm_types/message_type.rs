@@ -54,6 +54,8 @@ pub enum MessageType {
     ///
     /// 特别包含你邀请别人加入群聊
     SystemInvite,
+    /// 消息撤回
+    Revoke,
     /// 未知类型
     Unknown {
         /// 类别 id
@@ -83,6 +85,7 @@ impl Display for MessageType {
             Self::SystemInvite => f.write_str("SystemInvite"),
             Self::Unknown { type_id, sub_id } => write!(f, "Unknown({}, {})", type_id, sub_id),
             Self::GroupNotice => f.write_str("GroupNotice"),
+            Self::Revoke => f.write_str("Revoke"),
         }
     }
 }
@@ -106,7 +109,9 @@ impl MessageData {
             (50, 0) => MessageType::PhoneCall,
             (65, 0) => MessageType::FriendRecommend,
             (10000, 0) => MessageType::SystemNotice,
+            (10000, 1) => MessageType::Revoke,
             (10000, 4) => MessageType::FriendPatPat,
+            (10000, 57) => MessageType::Revoke,
             (10000, 8000) => MessageType::SystemInvite,
             (x, y) => MessageType::Unknown { type_id: x, sub_id: y },
         }

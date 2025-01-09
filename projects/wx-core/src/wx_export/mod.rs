@@ -58,27 +58,14 @@ impl WxExport {
             w.write_data(row.room_id())?;
             w.write_data(row.room_name())?;
             match row.get_type() {
-                MessageType::Text => {
-                    w.write_data(row.text())?;
-                    w.write_data("Text")?;
-                }
-                MessageType::TextReference => {
-                    w.write_data(row.text_reference())?;
-                    w.write_data("TextReference")?;
-                }
-                MessageType::FriendPatPat => {
-                    w.write_data(row.text())?;
-                    w.write_data("PatFriend")?;
-                }
-                MessageType::Unknown { type_id, sub_id } => {
-                    w.write_data(row.text())?;
-                    w.write_data(format!("Unknown({type_id},{sub_id})"))?;
-                }
-                _ => {
-                    w.write_data(row.text())?;
-                    w.write_data(row.get_type())?;
-                }
+                MessageType::Text => w.write_data(row.text())?,
+                MessageType::TextReference => w.write_data(row.text_reference())?,
+                MessageType::FriendPatPat => w.write_data(row.text())?,
+                MessageType::Revoke => w.write_data(row.revoke_message())?,
+                MessageType::Unknown { .. } => w.write_data(row.text())?,
+                _ => w.write_data(row.text())?,
             }
+            w.write_data(row.get_type())?;
             if row.is_sender() {
                 w.write_data("发送")?;
             }
