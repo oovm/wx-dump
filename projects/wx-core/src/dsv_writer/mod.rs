@@ -1,6 +1,7 @@
 use std::{borrow::Cow, fmt::Display, marker::PhantomData};
 
 /// DSV 编码器
+#[derive(Clone, Debug)]
 pub struct DsvWriter {
     file_name: Cow<'static, str>,
 }
@@ -21,7 +22,7 @@ impl DsvWriter {
     //     Attachment::new(body).filename(self.file_name.to_string())
     // }
 }
-
+#[derive(Copy, Clone, Debug)]
 pub struct CsvConfig;
 
 impl DsvFormat for CsvConfig {
@@ -38,6 +39,7 @@ pub trait DsvFormat {
 
 pub type CsvLine = DsvLine<CsvConfig>;
 
+#[derive(Clone, Debug)]
 pub struct DsvLine<T> {
     buffer: String,
     config: PhantomData<T>,

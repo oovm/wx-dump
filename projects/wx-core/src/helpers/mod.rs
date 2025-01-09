@@ -1,3 +1,4 @@
+#![doc = "辅助函数"]
 use crate::{WxError, WxResult};
 use std::{collections::BTreeMap, fs::read_dir, path::PathBuf};
 

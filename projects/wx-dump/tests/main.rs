@@ -1,8 +1,8 @@
 use std::{
-    env::{current_dir, set_current_dir},
+    env::set_current_dir,
     path::{Path, PathBuf},
 };
-use wx_dump::{RunExport, WxArguments, WxDump};
+use wx_dump::{RunExport, WxArguments};
 
 #[test]
 fn ready() {

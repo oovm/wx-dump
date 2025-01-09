@@ -38,7 +38,9 @@ pub enum WxErrorKind {
         /// 待解密的文件夹
         path: PathBuf,
     },
+    /// 数据库错误
     DatabaseError {
+        /// 数据库错误
         error: sqlx::Error,
     },
     /// 解码失败
