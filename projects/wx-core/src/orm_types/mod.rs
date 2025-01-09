@@ -1,19 +1,17 @@
-use crate::{
-    WxExport, WxResult,
-    dsv_writer::{CsvLine, },
-};
+use crate::{WxExport, WxResult, dsv_writer::CsvLine};
 
 use chrono::{DateTime, Local};
 use futures_util::stream::TryStreamExt;
-use lz4_flex::{ decompress, };
+use lz4_flex::decompress;
+use rust_xlsxwriter::{Workbook, Worksheet};
 use sqlx::{
     Error, FromRow, Row, Sqlite,
     sqlite::{SqlitePoolOptions, SqliteRow},
 };
 use std::{
     fmt::{Debug, Formatter},
+    ops::AddAssign,
     path::PathBuf,
-
 };
 use tokio::{fs::File, io::AsyncWriteExt};
 
@@ -167,26 +165,45 @@ impl<'a> FromRow<'a, SqliteRow> for MessageRow {
     }
 }
 
+pub struct ExcelWriter {
+    db: Workbook,
+    table: Worksheet,
+    current_line: u32,
+}
+
+impl Default for ExcelWriter {
+    fn default() -> Self {
+        let mut wb = Workbook::new();
+        let ws = wb.new_worksheet_with_constant_memory();
+        Self { db: wb, table: ws, current_line: 0 }
+    }
+}
+
 impl WxExport {
     /// 导出消息
     pub async fn export_message(&self) -> WxResult<()> {
-        let mut file = File::create(self.db.join("MSG.csv")).await?;
-        // UTF8 HEAD for Excel
-        file.write_all(&[0xEF, 0xBB, 0xBF]).await?;
-        let mut line = CsvLine::new();
-        line.push_str("日期");
-        line.push_str("会话");
-        line.push_str("内容");
-        line.push_str("类型");
-        line.push_str("事件");
-        file.write_all(line.finish().as_bytes()).await?;
+        let mut workbook = Workbook::new();
+        let ws = workbook.add_worksheet_with_constant_memory();
+        ws.set_column_width(0, 10)?;
+        ws.write(0, 0, "日期")?;
+        ws.write(0, 1, "会话")?;
+        ws.write(0, 2, "内容")?;
+        ws.write(0, 3, "类型")?;
+        ws.write(0, 4, "事件")?;
+        let mut line = 0;
         for id in 0..99 {
             let db_path = self.db.join(format!("Multi/MSG{}.db", id));
-            self.export_message_on(db_path, &mut file).await?;
+            match self.export_message_on(db_path, ws, &mut line).await {
+                Ok(_) => {}
+                Err(_) => break,
+            }
         }
+        let mut file = std::fs::File::create(self.db.join("MSG.xlsx"))?;
+        workbook.save_to_writer(&mut file)?;
+
         Ok(())
     }
-    async fn export_message_on(&self, msg: PathBuf, file: &mut File) -> WxResult<()> {
+    async fn export_message_on(&self, msg: PathBuf, ws: &mut Worksheet, line: &mut u32) -> WxResult<()> {
         let micro_msg = self.db.join("MicroMsg.db");
         let path = micro_msg.to_str().unwrap_or_default();
         let db = SqlitePoolOptions::new();
@@ -195,37 +212,38 @@ impl WxExport {
             .bind(path) //
             .fetch(&db);
         while let Some(row) = rows.try_next().await? {
-            let mut line = CsvLine::new();
-            line.push_str(&row.time.format("%Y-%m-%d %H:%M:%S").to_string());
-            line.push_str(&row.room_name);
-
+            line.add_assign(1);
+            ws.write(*line, 0, row.time.to_rfc3339())?;
+            ws.write(*line, 1, &row.room_name)?;
             match row.r#type {
                 MessageType::Text => {
-                    line.push_str(&row.message);
-                    line.push_str("Text");
+                    ws.write(*line, 2, row.message)?;
+                    ws.write(*line, 3, "Text")?;
                 }
                 MessageType::TextReference => {
-                    line.push_str(&row.binary_as_message().unwrap_or_else(|e| e.to_string()));
-                    line.push_str("TextReference")
+                    ws.write(*line, 2, row.binary_as_message().unwrap_or_else(|e| e.to_string()))?;
+                    ws.write(*line, 3, "TextReference")?;
                 }
                 MessageType::PatFriend => {
-                    line.push_str(&row.message);
-                    line.push_str("PatFriend")
+                    ws.write(*line, 2, row.message)?;
+                    ws.write(*line, 3, "PatFriend")?;
                 }
                 MessageType::Unknown { type_id, sub_id } => {
-                    line.push_str(&row.message);
-                    line.push_str(&format!("Unknown({type_id},{sub_id})"))
+                    ws.write(*line, 2, row.message)?;
+                    ws.write(*line, 3, format!("Unknown({type_id},{sub_id})"))?;
                 }
                 _ => continue,
             }
             if row.is_sender {
-                line.push_str("发送");
+                ws.write(*line, 4, "发送")?;
             }
             else {
-                line.push_str("接收");
+                ws.write(*line, 4, "接收")?;
             }
-            file.write_all(line.finish().as_bytes()).await?;
         }
         Ok(())
+    }
+    pub fn next_line(&mut self) {
+        self.line.add_assign(1);
     }
 }

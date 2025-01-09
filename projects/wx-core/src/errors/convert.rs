@@ -7,6 +7,7 @@ use std::{
     path::{Path, StripPrefixError},
     string::FromUtf8Error,
 };
+use rust_xlsxwriter::XlsxError;
 
 impl From<WxErrorKind> for WxError {
     fn from(value: WxErrorKind) -> Self {
@@ -74,6 +75,11 @@ impl From<windows::core::Error> for WxError {
 impl From<sqlx::Error> for WxError {
     fn from(error: sqlx::Error) -> Self {
         WxError { kind: Box::new(WxErrorKind::DatabaseError { error }) }
+    }
+}
+impl From<XlsxError> for WxError {
+    fn from(error: XlsxError) -> Self {
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "xlsx", message: error.to_string() }) }
     }
 }
 impl WxError {
