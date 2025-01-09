@@ -1,10 +1,10 @@
-ATTACH DATABASE ?1 AS MicroMsg;
+attach database ?1 as MicroMsg;
 select message.*, room.strNickName
---        n.UsrName
+-- n.UsrName
 from MSG message
-         --          JOIN main.Name2ID n ON n.rowid  = m.TalkerId
+         -- left join Name2ID on n.rowid = MSG.TalkerId
          left join MicroMsg.Session room --
-              on room.strUsrName = message.StrTalker
+                   on room.strUsrName = message.StrTalker
 order by Sequence desc
 -- limit 10
 ;

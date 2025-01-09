@@ -1,4 +1,4 @@
-use crate::orm_types::MessageRow;
+use crate::orm_types::MessageData;
 
 /// 消息类型
 #[derive(Copy, Clone, Debug)]
@@ -55,7 +55,7 @@ pub enum MessageType {
     },
 }
 
-impl MessageRow {
+impl MessageData {
     pub fn get_type(&self) -> MessageType {
         match (self.Type, self.SubType) {
             (1, 0) => MessageType::Text,
