@@ -1,0 +1,29 @@
+[package]
+name = "wx-proto"
+version = "0.0.0"
+authors = ["Aster <192607617@qq.com>"]
+description = "微信 protobuf 字段定义"
+categories = ["rust-patterns"]
+homepage = "https://github.com/oovm/wx-dump/tree/dev/projects/wx-core"
+repository = "https://github.com/oovm/wx-dump"
+documentation = "https://docs.rs/wx-core"
+readme = "readme.md"
+license = "MPL-2.0"
+edition = "2021"
+exclude = ["package.json", "tests/**"]
+
+[dependencies]
+prost = { version = "0.13.4", default-features = false, features = ["prost-derive"] }
+# Only necessary if using Protobuf well-known types:
+prost-types = { version = "0.13.4", default-features = false }
+
+[dev-dependencies]
+anyhow = "1.0.95"
+tokio = { version = "1.42.0", features = ["full"] }
+
+[features]
+default = ["shell"]
+shell = ["windows"]
+
+[package.metadata.docs.rs]
+all-features = true

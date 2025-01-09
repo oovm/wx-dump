@@ -32,6 +32,7 @@ impl WxExport {
         excel.write_title("内容", 60.0)?;
         excel.write_title("类型", 15.0)?;
         excel.write_title("事件", 10.0)?;
+        excel.write_title("额外信息", 10.0)?;
         for id in 0..99 {
             let db_path = self.dir.join(format!("Multi/MSG{}.db", id));
             trace!("读取聊天记录: {}", db_path.display());
@@ -59,6 +60,7 @@ impl WxExport {
             w.write_data(row.room_name())?;
             match row.get_type() {
                 MessageType::TextReference => w.write_data(row.text_reference())?,
+                MessageType::Image => w.write_data(row.text_message())?,
                 MessageType::Revoke => w.write_data(row.revoke_message())?,
                 MessageType::PhoneCall => w.write_data(row.voip_message())?,
                 MessageType::Voice => w.write_data(row.voice_message())?,
@@ -71,6 +73,7 @@ impl WxExport {
             else {
                 w.write_data("接收")?;
             }
+            w.write_data(row.image_message())?;
         }
         Ok(())
     }

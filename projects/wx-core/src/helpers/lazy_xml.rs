@@ -4,7 +4,7 @@ use std::str::FromStr;
 use sxd_document::Package;
 use sxd_xpath::{Context, Factory, Value};
 
-/// A lazy XML parser.
+/// 惰性 XML 字段提取器
 pub struct LazyXML {
     factory: Factory,
     package: Package,
@@ -24,6 +24,7 @@ impl FromStr for LazyXML {
     }
 }
 impl LazyXML {
+    /// 根据 xpath 查找节点
     pub fn get_xpath(&self, xpath: &str) -> WxResult<Value> {
         let xpath = match self.factory.build(xpath)? {
             Some(s) => s,

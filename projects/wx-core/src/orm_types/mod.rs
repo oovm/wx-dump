@@ -1,8 +1,7 @@
 #![allow(non_snake_case, missing_docs)]
-use crate::{WxError, WxResult, helpers::LazyXML};
+use crate::{ WxResult, helpers::LazyXML};
 use futures_util::stream::BoxStream;
 use lz4_flex::decompress;
-use serde::Deserialize;
 use sqlx::{FromRow, Pool, Sqlite};
 use std::{fmt::Debug, path::Path, str::FromStr};
 
@@ -21,6 +20,12 @@ pub struct MessageData {
     IsSender: i32,
     StrTalker: String,
     strNickName: String,
+}
+
+impl MessageData {
+    pub fn image_message(&self) -> WxResult<String> {
+        Ok(String::from_utf8_lossy(&self.BytesExtra).to_string())
+    }
 }
 
 /// 撤回的消息
