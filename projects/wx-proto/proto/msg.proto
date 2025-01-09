@@ -1,0 +1,23 @@
+syntax = "proto3";
+package wx.core;
+
+/// 消息额外信息
+message MsgBytesExtra {
+	/// 消息类型
+	message MsgI32 {
+		/// 消息类型
+		int32 type = 1;
+		/// 消息值
+		int32 value = 2;
+	}
+	message MsgString {
+		/// 消息类型
+		int32 type = 1;
+		/// 消息值
+		string message = 2;
+	}
+	/// 消息类型
+	MsgI32 i32 = 1;
+	/// 消息类型
+	repeated MsgString string = 3;
+}

@@ -2,6 +2,7 @@
 resolver = "2"
 members = ["projects/*"]
 default-members = [
+    "projects/wx-proto",
     "projects/wx-core",
     "projects/wx-dump",
 ]

@@ -35,6 +35,10 @@ serde = { version = "1.0.217", features = ["derive"] }
 sxd-document = "0.3.2"
 sxd-xpath = "0.4.2"
 
+[dependencies.wx-proto]
+version = "0.0.*"
+path = "../wx-proto"
+
 [dependencies.windows]
 version = "0.59.0"
 features = [

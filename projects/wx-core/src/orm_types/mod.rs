@@ -1,9 +1,10 @@
 #![allow(non_snake_case, missing_docs)]
-use crate::{ WxResult, helpers::LazyXML};
+use crate::{WxResult, helpers::LazyXML};
 use futures_util::stream::BoxStream;
 use lz4_flex::decompress;
 use sqlx::{FromRow, Pool, Sqlite};
 use std::{fmt::Debug, path::Path, str::FromStr};
+use wx_proto::{ proto::MsgBytesExtra};
 
 pub mod message_type;
 
@@ -16,7 +17,7 @@ pub struct MessageData {
     CreateTime: i64,
     StrContent: String,
     CompressContent: Vec<u8>,
-    BytesExtra: Vec<u8>,
+    BytesExtra: MsgBytesExtra,
     IsSender: i32,
     StrTalker: String,
     strNickName: String,
@@ -24,7 +25,7 @@ pub struct MessageData {
 
 impl MessageData {
     pub fn image_message(&self) -> WxResult<String> {
-        Ok(String::from_utf8_lossy(&self.BytesExtra).to_string())
+        Ok(format!("{:#?}", self.BytesExtra))
     }
 }
 
