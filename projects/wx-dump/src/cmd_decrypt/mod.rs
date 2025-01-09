@@ -16,6 +16,7 @@ pub struct RunDecrypt {
 }
 
 impl RunDecrypt {
+    #[cfg(windows)]
     pub fn run(&self, c: WxArguments) -> anyhow::Result<()> {
         let mut wechat_info = WxScanner::default();
         if let Some(key) = self.key.as_ref() {
@@ -37,6 +38,10 @@ impl RunDecrypt {
         //     check_hmac,
         //     |s| println!("{s}"),
         // )?;
+        Ok(())
+    }
+    #[cfg(not(windows))]
+    pub fn run(self, c: WxArguments) -> anyhow::Result<()> {
         Ok(())
     }
 }

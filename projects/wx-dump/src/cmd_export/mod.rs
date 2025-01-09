@@ -1,11 +1,8 @@
 use crate::{DEFAULT_SAVE_DIR, WxArguments};
 use clap::Parser;
-use std::{
-    env::current_dir,
-    path::{ PathBuf},
-};
+use std::{env::current_dir,  path::PathBuf};
 use tracing::{error, trace};
-use wx_core::{WxExport};
+use wx_core::WxExport;
 
 #[derive(Clone, Debug, Parser)]
 pub struct RunExport {
@@ -19,6 +16,10 @@ impl RunExport {
             Some(s) => self.export_db(&args, PathBuf::from(s)).await?,
             None => {
                 let dump = current_dir()?.join(DEFAULT_SAVE_DIR);
+                match dump.file_name().and_then(|s| s.to_str()) {
+                    Some(s) if s.starts_with("wxid_") => {}
+                    _ => return Ok(()),
+                }
                 trace!("dump dir: {}", dump.display());
                 for dir in std::fs::read_dir(dump)? {
                     match dir {
@@ -34,8 +35,9 @@ impl RunExport {
         Ok(())
     }
     pub async fn export_db(&self, _: &WxArguments, dir: PathBuf) -> anyhow::Result<()> {
+
         trace!("dump file: {}", dir.display());
-        let wx = WxExport { db: dir};
+        let wx = WxExport { db: dir };
         wx.export_message().await?;
         Ok(())
     }

@@ -27,6 +27,7 @@ pub struct RunSearch {
     show_error_info: bool,
 }
 impl RunSearch {
+    #[cfg(windows)]
     pub fn run(&self, c: WxArguments) -> anyhow::Result<()> {
         let mut wechat_info = WxScanner::default();
         wechat_info.open_wechat_process_with_out_info(&c.process_id, &c.process_name, &c.module_name)?;
@@ -41,5 +42,9 @@ impl RunSearch {
             println!("{:?}", wechat_info.memory_search(&data, self.real_addr)?);
         }
         anyhow::Ok(())
+    }
+    #[cfg(not(windows))]
+    pub fn run(self, c: WxArguments) -> anyhow::Result<()> {
+        Ok(())
     }
 }

@@ -19,6 +19,7 @@ pub struct RunRead {
 }
 
 impl RunRead {
+    #[cfg(windows)]
     pub fn run(&self, c: WxArguments) -> anyhow::Result<()> {
         let mut wechat_info = WxScanner::default();
         wechat_info.open_wechat_process_with_out_info(&c.process_id, &c.process_name, &c.module_name)?;
@@ -30,5 +31,9 @@ impl RunRead {
             println!("{:?}", &data);
         };
         anyhow::Ok(())
+    }
+    #[cfg(not(windows))]
+    pub fn run(self, c: WxArguments) -> anyhow::Result<()> {
+        Ok(())
     }
 }
