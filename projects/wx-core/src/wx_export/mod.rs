@@ -75,7 +75,7 @@ impl WxExport {
                     w.write_data(format!("Unknown({type_id},{sub_id})"))?;
                 }
                 _ => {
-                    w.write_data("")?;
+                    w.write_data(row.text())?;
                     w.write_data(row.get_type())?;
                 }
             }

@@ -2,6 +2,8 @@
 use crate::WxResult;
 use futures_util::stream::BoxStream;
 use lz4_flex::decompress;
+use quick_xml::de::from_str;
+use serde::Deserialize;
 use sqlx::{FromRow, Pool, Sqlite};
 use std::{fmt::Debug, path::Path};
 
@@ -20,6 +22,15 @@ pub struct MessageData {
     IsSender: i32,
     StrTalker: String,
     strNickName: String,
+}
+
+/// 撤回的消息
+///
+/// `<revokemsg>"某人" 撤回了一条消息</revokemsg>`
+#[derive(Debug, Deserialize)]
+pub struct RevokeMessage {
+    #[serde(rename = "$value")]
+    field: String,
 }
 
 impl MessageData {
@@ -55,6 +66,12 @@ impl MessageData {
     pub fn text_reference(&self) -> WxResult<String> {
         let xml = self.binary_as_string()?;
         Ok(xml)
+    }
+    /// 撤回消息
+    pub fn revoke_message(&self) -> WxResult<String> {
+        let xml = self.binary_as_string()?;
+        let message: RevokeMessage = from_str(&self.StrContent)?;
+        Ok(message.field)
     }
     pub fn unix_time(&self) -> i64 {
         // UTC+8

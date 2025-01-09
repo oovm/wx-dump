@@ -1,6 +1,6 @@
 [package]
 name = "wx-core"
-version = "0.0.0"
+version = "0.0.1"
 authors = ["Aster <192607617@qq.com>"]
 description = "微信数据解析工具"
 categories = ["rust-patterns"]
@@ -31,6 +31,8 @@ sqlx = { version = "0.8.2", features = ["runtime-tokio-rustls", "sqlite"] }
 futures-util = "0.3.31"
 lz4_flex = "0.11.3"
 rust_xlsxwriter = { version = "0.80.0", features = ["constant_memory", "chrono"] }
+quick-xml = { version = "0.37.1", features = ["serialize"] }
+serde = { version = "1.0.217", features = ["derive"] }
 
 [dependencies.windows]
 version = "0.59.0"
