@@ -4,7 +4,7 @@ use futures_util::stream::BoxStream;
 use lz4_flex::decompress;
 use sqlx::{FromRow, Pool, Sqlite};
 use std::{fmt::Debug, path::Path, str::FromStr};
-use wx_proto::{ proto::MsgBytesExtra};
+use wx_proto::proto::MsgBytesExtra;
 
 pub mod message_type;
 
@@ -21,12 +21,6 @@ pub struct MessageData {
     IsSender: i32,
     StrTalker: String,
     strNickName: String,
-}
-
-impl MessageData {
-    pub fn image_message(&self) -> WxResult<String> {
-        Ok(format!("{:#?}", self.BytesExtra))
-    }
 }
 
 /// 撤回的消息
@@ -70,10 +64,16 @@ impl MessageData {
     pub fn text_message(&self) -> &str {
         &self.StrContent
     }
+    pub fn extra_info(&self) -> WxResult<String> {
+        Ok(format!("{:?}", self.BytesExtra))
+    }
     /// 将 `CompressContent` 字段转为 `ReferenceText` 格式
     pub fn text_reference(&self) -> WxResult<String> {
         let xml = self.binary_as_string()?;
         Ok(xml)
+    }
+    pub fn sender_id(&mut self) -> String {
+        self.BytesExtra.pop_sender().unwrap_or_default()
     }
     /// 撤回消息
     pub fn revoke_message(&self) -> WxResult<String> {

@@ -29,6 +29,7 @@ impl WxExport {
         excel.write_title("日期", 25.0)?;
         excel.write_title("群ID", 30.0)?;
         excel.write_title("群名", 30.0)?;
+        excel.write_title("发送人ID", 30.0)?;
         excel.write_title("内容", 60.0)?;
         excel.write_title("类型", 15.0)?;
         excel.write_title("事件", 10.0)?;
@@ -52,12 +53,13 @@ impl WxExport {
         let db = SqlitePoolOptions::new();
         let db = db.connect(&msg.to_str().unwrap_or_default()).await?;
         let mut rows = MessageData::query(&db, &self.dir);
-        while let Some(row) = rows.try_next().await? {
+        while let Some(mut row) = rows.try_next().await? {
             w.next_line();
             w.write_id64(row.message_id())?;
             w.write_time(row.unix_time())?;
             w.write_data(row.room_id())?;
             w.write_data(row.room_name())?;
+            w.write_data(row.sender_id())?;
             match row.get_type() {
                 MessageType::TextReference => w.write_data(row.text_reference())?,
                 MessageType::Image => w.write_data(row.text_message())?,
@@ -73,7 +75,7 @@ impl WxExport {
             else {
                 w.write_data("接收")?;
             }
-            w.write_data(row.image_message())?;
+            w.write_data(row.extra_info())?;
         }
         Ok(())
     }
