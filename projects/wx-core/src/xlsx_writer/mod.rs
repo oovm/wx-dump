@@ -1,4 +1,4 @@
-use rust_xlsxwriter::{ExcelDateTime, Format, IntoExcelData, Workbook, Worksheet, XlsxError};
+use rust_xlsxwriter::{Color, ExcelDateTime, Format, FormatAlign, IntoExcelData, Workbook, Worksheet, XlsxError};
 use std::{
     fmt::{Debug, Formatter},
     ops::AddAssign,
@@ -28,9 +28,14 @@ impl Default for XlsxWriter {
 }
 impl XlsxWriter {
     /// 写入标题
-    pub fn write_title(&mut self, data: impl IntoExcelData, width: f64) -> Result<(), XlsxError> {
+    pub fn write_title(&mut self, data: &str, width: f64) -> Result<(), XlsxError> {
+        let format = Format::new()
+            .set_bold()
+            .set_align(FormatAlign::Center)
+            .set_font_color(Color::White)
+            .set_background_color(Color::Black);
         self.table.set_column_width(self.current_column, width)?;
-        self.table.write(0, self.current_column, data)?;
+        self.table.write_with_format(0, self.current_column, data, &format)?;
         self.current_column.add_assign(1);
         Ok(())
     }
@@ -40,14 +45,22 @@ impl XlsxWriter {
         self.current_column.add_assign(1);
         Ok(())
     }
-    pub fn write_time(&mut self, data: i64) -> Result<(), XlsxError> {
-        let time = ExcelDateTime::from_timestamp(data)?;
-        let format = Format::new().set_num_format("yyyy年mm月dd日 hh:mm:ss");
-        self.table.write_with_format(self.current_line, self.current_column, time, &format)?;
+    /// 写入 id
+    pub fn write_id64(&mut self, data: i64) -> Result<(), XlsxError> {
+        let format = Format::new().set_align(FormatAlign::Center).set_num_format_index(1);
+        self.table.write_with_format(self.current_line, self.current_column, data, &format)?;
         self.current_column.add_assign(1);
         Ok(())
     }
 
+    /// 写入 Unix 时间戳
+    pub fn write_time(&mut self, data: i64) -> Result<(), XlsxError> {
+        let time = ExcelDateTime::from_timestamp(data)?;
+        let format = Format::new().set_align(FormatAlign::Center).set_num_format("yyyy年mm月dd日 hh:mm:ss");
+        self.table.write_with_format(self.current_line, self.current_column, time, &format)?;
+        self.current_column.add_assign(1);
+        Ok(())
+    }
     /// 保存
     pub fn save(self, path: &Path) -> Result<(), XlsxError> {
         let Self { mut db, table, .. } = self;

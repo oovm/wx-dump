@@ -2,7 +2,6 @@
 use crate::WxResult;
 use futures_util::stream::BoxStream;
 use lz4_flex::decompress;
-use rust_xlsxwriter::ExcelDateTime;
 use sqlx::{FromRow, Pool, Sqlite};
 use std::{fmt::Debug, path::Path};
 
@@ -59,7 +58,7 @@ impl MessageData {
     }
     pub fn unix_time(&self) -> i64 {
         // UTC+8
-        self.CreateTime + 8 * 60 * 60 * 1000
+        self.CreateTime + 8 * 60 * 60
     }
     pub fn is_sender(&self) -> bool {
         self.IsSender == 1

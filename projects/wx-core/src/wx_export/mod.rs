@@ -2,7 +2,6 @@ use crate::{MessageType, WxResult, XlsxWriter, orm_types::MessageData};
 use futures_util::TryStreamExt;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::path::PathBuf;
-use rust_xlsxwriter::ExcelDateTime;
 use tracing::{error, trace};
 use crate::helpers::url_display;
 
@@ -27,8 +26,8 @@ impl WxExport {
             return Ok(());
         }
         let mut excel = XlsxWriter::default();
-        excel.write_title("消息ID", 30.0)?;
-        excel.write_title("日期", 30.0)?;
+        excel.write_title("消息ID", 15.0)?;
+        excel.write_title("日期", 25.0)?;
         excel.write_title("群ID", 30.0)?;
         excel.write_title("群名", 30.0)?;
         excel.write_title("内容", 60.0)?;
@@ -55,7 +54,7 @@ impl WxExport {
         let mut rows = MessageData::query(&db, &self.dir);
         while let Some(row) = rows.try_next().await? {
             w.next_line();
-            w.write_data(row.message_id())?;
+            w.write_id64(row.message_id())?;
             w.write_time(row.unix_time())?;
             w.write_data(row.room_id())?;
             w.write_data(row.room_name())?;
