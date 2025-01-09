@@ -15,7 +15,10 @@ pub struct XlsxWriter {
 
 impl Debug for XlsxWriter {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("XlsxWriter").finish()
+        f.debug_struct("XlsxWriter")
+            .field("line", &self.current_line)
+            .field("column", &self.current_column)
+            .finish()
     }
 }
 
@@ -49,6 +52,7 @@ impl XlsxWriter {
     }
     /// 下一行
     pub fn next_line(&mut self) {
-        self.current_line.add_assign(1)
+        self.current_line.add_assign(1);
+        self.current_column = 0;
     }
 }

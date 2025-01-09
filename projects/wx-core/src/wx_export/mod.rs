@@ -1,7 +1,4 @@
-use crate::{
-    WxResult, XlsxWriter,
-    orm_types::{MessageRow, MessageType},
-};
+use crate::{MessageType, WxResult, XlsxWriter, orm_types::MessageRow};
 use futures_util::TryStreamExt;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::path::PathBuf;
@@ -52,29 +49,29 @@ impl WxExport {
         let mut rows = MessageRow::query(&db, &self.dir);
         while let Some(row) = rows.try_next().await? {
             w.next_line();
-            w.write_data(&row.time.naive_local())?;
-            w.write_data(&row.room_id)?;
-            w.write_data(&row.room_name)?;
-            match row.r#type {
+            w.write_data(row.excel_time())?;
+            w.write_data(row.room_id())?;
+            w.write_data(row.room_name())?;
+            match row.get_type() {
                 MessageType::Text => {
-                    w.write_data(row.message)?;
+                    w.write_data(row.text())?;
                     w.write_data("Text")?;
                 }
                 MessageType::TextReference => {
-                    w.write_data(row.binary_as_message())?;
+                    w.write_data(row.text_reference())?;
                     w.write_data("TextReference")?;
                 }
                 MessageType::PatFriend => {
-                    w.write_data(row.message)?;
+                    w.write_data(row.text())?;
                     w.write_data("PatFriend")?;
                 }
                 MessageType::Unknown { type_id, sub_id } => {
-                    w.write_data(row.message)?;
+                    w.write_data(row.text())?;
                     w.write_data(format!("Unknown({type_id},{sub_id})"))?;
                 }
                 _ => continue,
             }
-            if row.is_sender {
+            if row.is_sender() {
                 w.write_data("发送")?;
             }
             else {

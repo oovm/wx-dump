@@ -14,7 +14,7 @@ mod xlsx_writer;
 
 pub use crate::{
     errors::{WxError, WxErrorKind, WxResult},
-    orm_types::{MessageType},
+    orm_types::message_type::MessageType,
     wx_decrypt::WxDecryptor,
     wx_export::WxExport,
     wx_scanner::{WeChatProfile, WxScanner},
