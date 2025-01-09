@@ -58,13 +58,11 @@ impl WxExport {
             w.write_data(row.room_id())?;
             w.write_data(row.room_name())?;
             match row.get_type() {
-                MessageType::Text => w.write_data(row.text())?,
                 MessageType::TextReference => w.write_data(row.text_reference())?,
-                MessageType::FriendPatPat => w.write_data(row.text())?,
                 MessageType::Revoke => w.write_data(row.revoke_message())?,
-                MessageType::PhoneCall => w.write_data(row.voip_bubble_message())?,
-                MessageType::Unknown { .. } => w.write_data(row.text())?,
-                _ => w.write_data(row.text())?,
+                MessageType::PhoneCall => w.write_data(row.voip_message())?,
+                MessageType::Voice => w.write_data(row.voice_message())?,
+                _ => w.write_data(row.text_message())?,
             }
             w.write_data(row.get_type())?;
             if row.is_sender() {

@@ -32,7 +32,9 @@ pub struct RevokeMessage {
 pub struct VoIPBubbleMessage {
     xml: LazyXML,
 }
-
+pub struct VoiceMessage {
+    xml: LazyXML,
+}
 impl MessageData {
     pub fn query<'a>(db: &'a Pool<Sqlite>, path: &Path) -> BoxStream<'a, sqlx::Result<MessageData>> {
         let micro_msg = path.join("MicroMsg.db");
@@ -59,7 +61,7 @@ impl MessageData {
     pub fn room_name(&self) -> &str {
         &self.strNickName
     }
-    pub fn text(&self) -> &str {
+    pub fn text_message(&self) -> &str {
         &self.StrContent
     }
     /// 将 `CompressContent` 字段转为 `ReferenceText` 格式
@@ -74,10 +76,20 @@ impl MessageData {
         Ok(value.into_string())
     }
     /// 语音通话
-    pub fn voip_bubble_message(&self) -> WxResult<String> {
+    pub fn voip_message(&self) -> WxResult<String> {
         let xml = VoIPBubbleMessage { xml: LazyXML::from_str(&self.StrContent)? };
         let value = xml.xml.get_xpath("/voipmsg/VoIPBubbleMsg/msg/text()")?;
         Ok(value.into_string())
+    }
+    /// 语音留言
+    pub fn voice_message(&self) -> WxResult<String> {
+        let xml = VoiceMessage { xml: LazyXML::from_str(&self.StrContent)? };
+        let value = xml.xml.get_xpath("//voicetrans/@transtext");
+        let text = value.map(|x| x.into_string()).unwrap_or_default();
+        match text.as_str() {
+            "" => Ok("<语音未接收>".to_string()),
+            _ => Ok(text),
+        }
     }
     pub fn unix_time(&self) -> i64 {
         // UTC+8
