@@ -107,7 +107,7 @@ impl WxDump {
         Ok(())
     }
     #[cfg(not(windows))]
-    pub async fn run_auto(self, _: WxArguments) -> anyhow::Result<()> {
+    pub async fn run_auto(_: WxArguments) -> anyhow::Result<()> {
         Ok(())
     }
 }

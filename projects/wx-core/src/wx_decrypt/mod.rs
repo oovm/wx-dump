@@ -10,8 +10,8 @@ use std::{
     path::PathBuf,
 };
 use tracing::{debug, trace};
-use url::Url;
 use walkdir::WalkDir;
+use crate::helpers::url_display;
 
 /// 解密微信数据库
 #[derive(Debug)]
@@ -41,14 +41,8 @@ impl WxDecryptor {
             // create_dir_all(&self.output_path)?;
             create_dir_all(&self.output_path.join("Multi"))?;
         }
-        match Url::from_file_path(&self.source_path) {
-            Ok(o) => println!("原始路径: {}", o),
-            Err(_) => {}
-        }
-        match Url::from_file_path(&self.output_path) {
-            Ok(o) => println!("解密路径: {}", o),
-            Err(_) => {}
-        }
+        url_display(&self.source_path, |url| println!("原始路径: {}", url));
+        url_display(&self.output_path, |url| println!("保存路径: {}", url));
         for entry in WalkDir::new(&self.source_path) {
             match entry {
                 Ok(o) => {

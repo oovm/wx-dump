@@ -1,6 +1,11 @@
 #![doc = "辅助函数"]
 use crate::{WxError, WxResult};
-use std::{collections::BTreeMap, fs::read_dir, path::PathBuf};
+use std::{
+    collections::BTreeMap,
+    fs::read_dir,
+    path::{Path, PathBuf},
+};
+use url::Url;
 
 /// 获取微信主目录
 pub fn get_wechat_path(given: &Option<String>) -> WxResult<PathBuf> {
@@ -41,4 +46,11 @@ pub async fn read_database(wechat_path: &Option<String>) -> WxResult<BTreeMap<St
         }
     }
     Ok(map)
+}
+/// 显示 url 路径
+pub fn url_display(path: &Path, fmt: fn(Url)) {
+    match Url::from_file_path(path) {
+        Ok(o) => fmt(o),
+        Err(_) => {}
+    }
 }
