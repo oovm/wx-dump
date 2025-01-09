@@ -44,7 +44,7 @@ impl RunSearch {
         anyhow::Ok(())
     }
     #[cfg(not(windows))]
-    pub fn run(self, c: WxArguments) -> anyhow::Result<()> {
+    pub fn run(self, _: WxArguments) -> anyhow::Result<()> {
         Ok(())
     }
 }

@@ -83,6 +83,7 @@ impl WxDump {
             None => Self::run_auto(self.args).await,
         }
     }
+    #[cfg(windows)]
     pub async fn run_auto(c: WxArguments) -> anyhow::Result<()> {
         let mut wechat_info = WxScanner::default();
         wechat_info.open_wechat_process(&c.offset_map, &c.process_id, &c.process_name, &c.module_name)?;
@@ -103,6 +104,10 @@ impl WxDump {
                 _ => {}
             }
         }
+        Ok(())
+    }
+    #[cfg(not(windows))]
+    pub async fn run_auto(self, _: WxArguments) -> anyhow::Result<()> {
         Ok(())
     }
 }
