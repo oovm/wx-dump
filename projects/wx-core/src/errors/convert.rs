@@ -83,12 +83,15 @@ impl From<XlsxError> for WxError {
     }
 }
 impl WxError {
+    /// 自定义错误
     pub fn custom(message: impl ToString) -> WxError {
         WxError { kind: Box::new(WxErrorKind::Custom { message: message.to_string() }) }
     }
+    /// 非法偏移
     pub fn unsupported_offset(version: &str, field: &str) -> WxError {
         WxError { kind: Box::new(WxErrorKind::UnsupportedOffset { version: version.to_string(), field: field.to_string() }) }
     }
+    /// 非法秘钥
     pub fn invalid_key(key: [u8; 32], path: &Path) -> WxError {
         WxError { kind: Box::new(WxErrorKind::InvalidKey { key, path: path.to_owned() }) }
     }

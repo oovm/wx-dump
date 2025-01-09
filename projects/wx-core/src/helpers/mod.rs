@@ -2,6 +2,7 @@
 use crate::{WxError, WxResult};
 use std::{collections::BTreeMap, fs::read_dir, path::PathBuf};
 
+/// 获取微信主目录
 pub fn get_wechat_path(given: &Option<String>) -> WxResult<PathBuf> {
     let path = match given {
         Some(wechat_path) => PathBuf::from(wechat_path),
@@ -20,7 +21,7 @@ pub fn get_wechat_path(given: &Option<String>) -> WxResult<PathBuf> {
     }
     Ok(path)
 }
-
+/// 读取数据库
 pub async fn read_database(wechat_path: &Option<String>) -> WxResult<BTreeMap<String, PathBuf>> {
     let mut map = BTreeMap::new();
     let wechat_path_buf = get_wechat_path(wechat_path)?;

@@ -51,6 +51,7 @@ impl WxScanner {
         };
         Ok(vec)
     }
+    /// 内存搜索
     pub fn memory_search(&self, bytes: &[u8], real: bool) -> WxResult<Vec<usize>> {
         let process = self.process;
         let module = self.module;

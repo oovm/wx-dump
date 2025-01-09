@@ -35,7 +35,7 @@ impl RunExport {
     }
     pub async fn export_db(&self, _: &WxArguments, dir: PathBuf) -> anyhow::Result<()> {
         trace!("dump file: {}", dir.display());
-        let wx = WxExport { db: dir, line: 0 };
+        let wx = WxExport { db: dir};
         wx.export_message().await?;
         Ok(())
     }

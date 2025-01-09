@@ -16,14 +16,18 @@ use walkdir::WalkDir;
 /// 解密微信数据库
 #[derive(Debug)]
 pub struct WxDecryptor {
+    /// 源路径
     pub source_path: PathBuf,
+    /// 保存路径
     pub output_path: PathBuf,
+    /// 密钥
     pub key: [u8; 32],
     /// 是否需要校验 hmac
     pub need_check_hmac: bool,
 }
 
 impl WxDecryptor {
+    /// 解密微信数据库
     pub async fn decrypt(&self) -> WxResult<()> {
         if self.output_path.exists() {
             if !self.output_path.is_dir() {

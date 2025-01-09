@@ -1,19 +1,16 @@
-use crate::{WxExport, WxResult, dsv_writer::CsvLine};
+use crate::{XlsxWriter, WxExport, WxResult};
 
 use chrono::{DateTime, Local};
 use futures_util::stream::TryStreamExt;
 use lz4_flex::decompress;
-use rust_xlsxwriter::{IntoExcelData, Workbook, Worksheet, XlsxError};
 use sqlx::{
     Error, FromRow, Row, Sqlite,
     sqlite::{SqlitePoolOptions, SqliteRow},
 };
 use std::{
     fmt::{Debug, Formatter},
-    ops::AddAssign,
-    path::{Path, PathBuf},
+    path::{ PathBuf},
 };
-use tokio::{fs::File, io::AsyncWriteExt};
 
 #[allow(non_snake_case)]
 struct MessageRow {
@@ -127,6 +124,7 @@ impl From<(i32, i32)> for MessageType {
             (49, 57) => Self::TextReference,
             (50, 0) => Self::PhoneCall,
             (10000, 0) => Self::SystemNotice,
+            (10000, 4) => Self::PatFriend,
             (10000, 8000) => Self::SystemInvite,
             (x, y) => Self::Unknown { type_id: x, sub_id: y },
         }
@@ -165,42 +163,12 @@ impl<'a> FromRow<'a, SqliteRow> for MessageRow {
     }
 }
 
-pub struct ExcelWriter {
-    db: Workbook,
-    table: Worksheet,
-    current_line: u32,
-}
 
-impl Default for ExcelWriter {
-    fn default() -> Self {
-        let mut wb = Workbook::new();
-        let ws = wb.new_worksheet_with_constant_memory();
-        Self { db: wb, table: ws, current_line: 0 }
-    }
-}
-impl ExcelWriter {
-    pub fn write_title(&mut self, index: u16, data: impl IntoExcelData, width: f64) -> Result<(), XlsxError> {
-        self.table.set_column_width(index, width)?;
-        self.table.write(0, index, data)?;
-        Ok(())
-    }
-    pub fn write_data(&mut self, index: u16, data: impl IntoExcelData) -> Result<(), XlsxError> {
-        self.table.write(self.current_line, index, data)?;
-        Ok(())
-    }
-    pub fn save(&mut self, path: &Path) -> Result<(), XlsxError> {
-        let mut file = std::fs::File::create(path)?;
-        self.db.save_to_writer(&mut file)
-    }
-    pub fn next_line(&mut self) {
-        self.current_line.add_assign(1)
-    }
-}
 
 impl WxExport {
     /// 导出消息
     pub async fn export_message(&self) -> WxResult<()> {
-        let mut excel = ExcelWriter::default();
+        let mut excel = XlsxWriter::default();
         excel.write_title(0, "日期", 30.0)?;
         excel.write_title(1, "会话", 30.0)?;
         excel.write_title(2, "内容", 60.0)?;
@@ -215,7 +183,7 @@ impl WxExport {
         }
         Ok(excel.save(&self.db.join("MSG.xlsx"))?)
     }
-    async fn export_message_on(&self, msg: PathBuf, w: &mut ExcelWriter) -> WxResult<()> {
+    async fn export_message_on(&self, msg: PathBuf, w: &mut XlsxWriter) -> WxResult<()> {
         let micro_msg = self.db.join("MicroMsg.db");
         let path = micro_msg.to_str().unwrap_or_default();
         let db = SqlitePoolOptions::new();
@@ -225,9 +193,7 @@ impl WxExport {
             .fetch(&db);
         while let Some(row) = rows.try_next().await? {
             w.next_line();
-
-            w.write_data(0, row.time.to_rfc3339())?;
-            w.write_data(0, row.time.to_rfc3339())?;
+            w.write_data(0, &row.time.naive_local())?;
             w.write_data(1, &row.room_name)?;
             match row.r#type {
                 MessageType::Text => {
@@ -256,8 +222,5 @@ impl WxExport {
             }
         }
         Ok(())
-    }
-    pub fn next_line(&mut self) {
-        self.line.add_assign(1);
     }
 }

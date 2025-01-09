@@ -4,7 +4,7 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/oovm/shape-rs/dev/projects/images/Trapezohedron.svg")]
 #![doc(html_favicon_url = "https://raw.githubusercontent.com/oovm/shape-rs/dev/projects/images/Trapezohedron.svg")]
 
-mod dsv_writer;
+mod xlsx_writer;
 mod errors;
 pub mod helpers;
 mod orm_types;
@@ -13,7 +13,7 @@ mod wx_export;
 mod wx_scanner;
 
 pub use crate::{
-    dsv_writer::{CsvConfig, CsvLine, DsvFormat, DsvWriter},
+    xlsx_writer::{XlsxWriter},
     errors::{WxError, WxErrorKind, WxResult},
     wx_decrypt::WxDecryptor,
     wx_export::WxExport,
