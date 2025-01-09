@@ -62,7 +62,7 @@ impl WxExport {
             w.write_data(row.sender_id())?;
             match row.get_type() {
                 MessageType::TextReference => w.write_data(row.text_reference())?,
-                MessageType::Image => w.write_data(row.text_message())?,
+                MessageType::Image => w.write_data(row.image_path())?,
                 MessageType::Revoke => w.write_data(row.revoke_message())?,
                 MessageType::PhoneCall => w.write_data(row.voip_message())?,
                 MessageType::Voice => w.write_data(row.voice_message())?,

@@ -75,6 +75,9 @@ impl MessageData {
     pub fn sender_id(&mut self) -> String {
         self.BytesExtra.pop_sender().unwrap_or_default()
     }
+    pub fn image_path(&mut self) -> String {
+        self.BytesExtra.pop_image_path().unwrap_or_default()
+    }
     /// 撤回消息
     pub fn revoke_message(&self) -> WxResult<String> {
         let xml = RevokeMessage { xml: LazyXML::from_str(&self.StrContent)? };
