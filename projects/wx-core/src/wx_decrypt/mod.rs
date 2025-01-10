@@ -13,6 +13,8 @@ use tracing::{debug, trace};
 use walkdir::WalkDir;
 use crate::helpers::url_display;
 
+mod decrypt_dat;
+
 /// 解密微信数据库
 #[derive(Debug)]
 pub struct WxDecryptor {
