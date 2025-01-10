@@ -2,6 +2,7 @@ use crate::{
     MessageType, WxResult, XlsxWriter,
     helpers::url_display,
     orm_types::{MessageData, extensions::SqliteHelper},
+    wx_decrypt::decrypt_dat::XorDecryptor,
 };
 use futures_util::TryStreamExt;
 use rust_xlsxwriter::Format;
@@ -11,8 +12,11 @@ use tracing::{error, trace};
 /// 导出微信数据库中的数据
 #[derive(Debug)]
 pub struct WxExport {
+    pub wx_in: PathBuf,
     /// 数据库所在文件路径
-    pub path: PathBuf,
+    pub wx_out: PathBuf,
+    /// dat 解码器
+    pub dat: XorDecryptor,
     /// 是否导出群ID
     pub room_id: bool,
     /// 是否导出发送人ID
@@ -26,7 +30,7 @@ pub struct WxExport {
 impl WxExport {
     /// 导出消息
     pub async fn export_message(&self) -> WxResult<()> {
-        let micro_msg = self.path.join("MicroMsg.db");
+        let micro_msg = self.wx_out.join("MicroMsg.db");
         if !micro_msg.exists() {
             return Ok(());
         }
@@ -51,7 +55,7 @@ impl WxExport {
             excel.write_title("额外信息", 400.0)?;
         }
         for id in 0..99 {
-            let db_path = self.path.join(format!("Multi/MSG{}.db", id));
+            let db_path = self.wx_out.join(format!("Multi/MSG{}.db", id));
             if !db_path.exists() {
                 break;
             }
@@ -61,13 +65,13 @@ impl WxExport {
                 Err(e) => error!("读取聊天记录失败: {}", e),
             }
         }
-        let msg = self.path.join("MSG.xlsx");
+        let msg = self.wx_out.join("MSG.xlsx");
         url_display(&msg, |url| println!("写入聊天记录: {}", url));
         Ok(excel.save(&msg)?)
     }
     async fn export_message_on(&self, path: &str, w: &mut XlsxWriter) -> WxResult<()> {
         let mut db = SqliteHelper::open(path).await?;
-        let mut rows = MessageData::query(&mut db, &self.path);
+        let mut rows = MessageData::query(&mut db, &self.wx_out);
         while let Some(row) = rows.try_next().await? {
             w.next_line();
             w.write_id64(row.message_id())?;
@@ -82,7 +86,9 @@ impl WxExport {
             w.write_data(row.sender_name())?;
             match row.get_type() {
                 MessageType::TextReference => w.write_data(row.text_reference())?,
-                MessageType::Image => w.write_link(&row.image_path(), &row.image_link())?,
+                MessageType::Image => {
+                    w.write_link(&row.image_path(), &row.image_link(&self.dat, &self.wx_in, &self.wx_out).unwrap_or_default())?
+                }
                 MessageType::Revoke => w.write_data(row.revoke_message())?,
                 MessageType::PhoneCall => w.write_data(row.voip_message())?,
                 MessageType::Voice => w.write_data(row.voice_message())?,

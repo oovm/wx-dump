@@ -3,6 +3,7 @@ use clap::Parser;
 use std::{env::current_dir, path::PathBuf};
 use tracing::{error, trace};
 use wx_core::{WxExport, helpers::url_display};
+use wx_core::helpers::get_wechat_path;
 
 #[derive(Clone, Debug, Parser)]
 pub struct RunExport {
@@ -48,10 +49,14 @@ impl RunExport {
         };
         Ok(())
     }
-    pub async fn export_db(&self, _: &WxArguments, dir: PathBuf) -> anyhow::Result<()> {
+    pub async fn export_db(&self, args: &WxArguments, dir: PathBuf) -> anyhow::Result<()> {
+        let wxid = dir.file_name().unwrap().to_str().unwrap();
+        let path = get_wechat_path(&args.wechat_path)?;
         url_display(&dir, |url| println!("正在导出个人目录: {}", url));
         let wx = WxExport {
-            path: dir,
+            wx_in: path.join("wxid"),
+            wx_out: dir,
+            dat: Default::default(),
             room_id: self.room_id,
             sender_id: self.sender_id,
             compress_content: self.compress_content,
