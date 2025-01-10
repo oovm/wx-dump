@@ -87,7 +87,14 @@ impl MessageData {
             return "<自己>";
         }
         match self.SenderName.as_str() {
-            "" => "<对方>",
+            "" => {
+                if self.RoomId.ends_with("@chatroom") {
+                    "<失联>"
+                }
+                else {
+                    "<对方>"
+                }
+            }
             named => named,
         }
     }

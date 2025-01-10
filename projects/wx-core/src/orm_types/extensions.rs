@@ -2,6 +2,7 @@ use crate::WxResult;
 use rusqlite::{
     Error, Result,
     functions::{Context, FunctionFlags},
+    types::FromSqlResult,
 };
 use sqlx::{Connection, SqliteConnection};
 use wx_proto::{Message, proto::MsgBytesExtra};
@@ -36,7 +37,7 @@ fn add_builtin(db: &rusqlite::Connection) -> Result<()> {
 }
 
 fn get_sender_id(ctx: &Context) -> Result<String, Error> {
-    let text = ctx.get_raw(0).as_blob()?;
+    let text = ctx.get_raw(0).as_blob().unwrap_or_default();
     match MsgBytesExtra::decode(text) {
         Ok(o) => Ok(o.get_sender_id().to_string()),
         Err(e) => Ok(String::new()),

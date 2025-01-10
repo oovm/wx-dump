@@ -40,6 +40,7 @@ impl WxExport {
         if self.sender_id {
             excel.write_title("发送人ID", 30.0)?;
         }
+        excel.write_title("发送人", 30.0)?;
         excel.write_title("内容", 60.0)?;
         excel.write_title("类型", 15.0)?;
         excel.write_title("事件", 10.0)?;

@@ -8,7 +8,9 @@ use wx_core::{WxExport, helpers::url_display};
 pub struct RunExport {
     /// 数据库目录
     pub path: Option<String>,
+    #[arg(long, default_value_t = false)]
     pub room_id: bool,
+    #[arg(long, default_value_t = false)]
     pub sender_id: bool,
 }
 
