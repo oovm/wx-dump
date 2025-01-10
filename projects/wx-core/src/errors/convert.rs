@@ -1,13 +1,14 @@
 use super::*;
 use aes::cipher::{InvalidLength, block_padding::UnpadError};
 use lz4_flex::block::DecompressError;
+use rusqlite::types::FromSqlError;
+use rust_xlsxwriter::XlsxError;
 use std::{
     array::TryFromSliceError,
     num::ParseIntError,
     path::{Path, StripPrefixError},
     string::FromUtf8Error,
 };
-use rust_xlsxwriter::XlsxError;
 use sxd_xpath::ExecutionError;
 
 impl From<WxErrorKind> for WxError {
@@ -78,6 +79,13 @@ impl From<sqlx::Error> for WxError {
         WxError { kind: Box::new(WxErrorKind::DatabaseError { error }) }
     }
 }
+
+impl From<rusqlite::Error> for WxError {
+    fn from(error: rusqlite::Error) -> Self {
+        WxError { kind: Box::new(WxErrorKind::Custom { message: error.to_string() }) }
+    }
+}
+
 impl From<XlsxError> for WxError {
     fn from(error: XlsxError) -> Self {
         WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "xlsx", message: error.to_string() }) }
@@ -101,6 +109,16 @@ impl From<sxd_document::parser::Error> for WxError {
     }
 }
 
+impl From<FromSqlError> for WxError {
+    fn from(error: FromSqlError) -> Self {
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "sql", message: error.to_string() }) }
+    }
+}
+impl From<prost::DecodeError> for WxError {
+    fn from(error: prost::DecodeError) -> Self {
+        WxError { kind: Box::new(WxErrorKind::DecodeError { algorithm: "proto", message: error.to_string() }) }
+    }
+}
 impl WxError {
     /// 自定义错误
     pub fn custom(message: impl ToString) -> WxError {

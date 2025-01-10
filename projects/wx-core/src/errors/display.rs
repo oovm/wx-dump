@@ -1,7 +1,8 @@
 use super::*;
-use rust_xlsxwriter::{ Format, IntoExcelData,  Worksheet, XlsxError};
+use rust_xlsxwriter::{Format, IntoExcelData, Worksheet, XlsxError};
 
 impl Error for WxError {}
+impl Error for WxErrorKind {}
 
 impl Debug for WxError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

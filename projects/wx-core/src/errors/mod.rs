@@ -12,7 +12,7 @@ pub type WxResult<T> = Result<T, WxError>;
 
 /// A boxed error kind, wrapping an [WxErrorKind].
 pub struct WxError {
-    kind: Box<WxErrorKind>,
+    pub(crate) kind: Box<WxErrorKind>,
 }
 
 /// The kind of [WxError].

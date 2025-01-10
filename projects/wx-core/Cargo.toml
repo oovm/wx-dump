@@ -34,6 +34,9 @@ rust_xlsxwriter = { version = "0.80.0", features = ["constant_memory", "chrono"]
 serde = { version = "1.0.217", features = ["derive"] }
 sxd-document = "0.3.2"
 sxd-xpath = "0.4.2"
+regex = "1.11.1"
+rusqlite = { version = "0.32.1", features = ["functions"] }
+prost = "0.13.4"
 
 [dependencies.wx-proto]
 version = "0.0.*"

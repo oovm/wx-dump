@@ -8,6 +8,8 @@ use wx_proto::proto::MsgBytesExtra;
 
 pub mod message_type;
 
+mod extensions;
+
 #[doc = include_str!("MSG.md")]
 #[derive(Debug, FromRow)]
 pub struct MessageData {
@@ -44,9 +46,10 @@ impl MessageData {
     }
     pub fn query_bytes<'a>(db: &'a Pool<Sqlite>, path: &Path) -> BoxStream<'a, sqlx::Result<MessageData>> {
         // let micro_msg = path.join("MicroMsg.db");
-        sqlx::query_scalar::<Sqlite, Vec<u8>>("select message.BytesExtra from MSG message")
-            // .bind(micro_msg.to_string_lossy().to_string())
-            .fetch(db)
+        // sqlx::query_scalar::<Sqlite, Vec<u8>>("select message.BytesExtra from MSG message")
+        // .bind(micro_msg.to_string_lossy().to_string())
+        // .fetch(db);
+        todo!()
     }
 
     pub fn binary_as_string(&self) -> WxResult<String> {
