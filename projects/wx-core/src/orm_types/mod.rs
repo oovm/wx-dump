@@ -1,18 +1,17 @@
 #![allow(non_snake_case, missing_docs)]
-use crate::{WxResult, helpers::LazyXML};
-use futures_util::stream::BoxStream;
+use crate::{WxResult, helpers::LazyXML, orm_types::extensions::SqliteHelper, WxError};
 use lz4_flex::decompress;
-use sqlx::{FromRow, Pool, Sqlite};
-use std::{fmt::Debug, path::Path, str::FromStr};
+use rusqlite::Row;
+use std::{fmt::Debug, ops::Coroutine, path::Path, str::FromStr};
+use prost::Message;
 use wx_proto::proto::MsgBytesExtra;
-use crate::orm_types::extensions::SqliteHelper;
 
 pub mod message_type;
 
 pub mod extensions;
 
 #[doc = include_str!("MSG.md")]
-#[derive(Debug, FromRow)]
+#[derive(Debug)]
 pub struct MessageData {
     Sequence: i64,
     Type: i32,
@@ -21,9 +20,31 @@ pub struct MessageData {
     StrContent: String,
     CompressContent: Vec<u8>,
     BytesExtra: MsgBytesExtra,
+    SenderId: String,
     IsSender: i32,
     StrTalker: String,
     strNickName: String,
+}
+
+impl TryFrom<&Row<'_>> for MessageData {
+    type Error = WxError;
+
+    fn try_from(r: &Row) -> WxResult<Self> {
+        let extra: Vec<u8> = r.get("BytesExtra")?;
+        Ok(Self {
+            Sequence: r.get("Sequence")?,
+            Type: r.get("Type")?,
+            SubType: r.get("SubType")?,
+            CreateTime: r.get("CreateTime")?,
+            StrContent: r.get("StrContent")?,
+            CompressContent: r.get("CompressContent")?,
+            BytesExtra: MsgBytesExtra::decode(extra.as_slice())?,
+            SenderId: r.get("SenderId").unwrap_or_default(),
+            IsSender: r.get("IsSender")?,
+            StrTalker: r.get("StrTalker")?,
+            strNickName: r.get("strNickName")?,
+        })
+    }
 }
 
 /// 撤回的消息
@@ -39,18 +60,10 @@ pub struct VoiceMessage {
     xml: LazyXML,
 }
 impl MessageData {
-    pub fn query(db: &SqliteHelper, path: &Path) -> BoxStream<'a, sqlx::Result<MessageData>> {
+    pub fn query(db: &SqliteHelper, path: &Path) -> impl Coroutine<Yield = MessageData, Return = WxResult<()>> {
         let micro_msg = path.join("MicroMsg.db");
-        db.query_as(include_str!("msg_query.sql"), [micro_msg])
+        db.query_as::<MessageData>(include_str!("msg_query.sql"), [micro_msg.to_string_lossy().to_string()])
     }
-    pub fn query_bytes<'a>(db: &'a Pool<Sqlite>, path: &Path) -> BoxStream<'a, sqlx::Result<MessageData>> {
-        // let micro_msg = path.join("MicroMsg.db");
-        // sqlx::query_scalar::<Sqlite, Vec<u8>>("select message.BytesExtra from MSG message")
-        // .bind(micro_msg.to_string_lossy().to_string())
-        // .fetch(db);
-        todo!()
-    }
-
     pub fn binary_as_string(&self) -> WxResult<String> {
         let mut decompress = decompress(&self.CompressContent, 0x10004)?;
         // 移除字符串末尾的 `<NUL>`
@@ -81,11 +94,11 @@ impl MessageData {
         let xml = self.binary_as_string()?;
         Ok(xml)
     }
-    pub fn sender_id(&mut self) -> String {
-        self.BytesExtra.pop_sender().unwrap_or_default()
+    pub fn sender_id(&self) -> &str {
+        &self.SenderId
     }
-    pub fn image_path(&mut self) -> String {
-        self.BytesExtra.pop_image_path().unwrap_or_default()
+    pub fn image_path(&self) -> String {
+        "self.BytesExtra.pop_image_path()".to_string()
     }
     /// 撤回消息
     pub fn revoke_message(&self) -> WxResult<String> {

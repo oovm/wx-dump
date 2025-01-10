@@ -1,7 +1,6 @@
 use crate::WxResult;
 use std::path::PathBuf;
 use sqlx::sqlite::SqliteConnectOptions;
-use sqlx::SqlitePool;
 
 /// 导出微信数据库中的数据
 #[derive(Debug)]
