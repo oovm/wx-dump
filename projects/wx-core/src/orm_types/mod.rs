@@ -1,9 +1,11 @@
 #![allow(non_snake_case, missing_docs)]
-use crate::{WxResult, helpers::LazyXML, orm_types::extensions::SqliteHelper, WxError};
+use crate::{WxError, WxResult, helpers::LazyXML, orm_types::extensions::SqliteHelper};
+use futures_util::stream::BoxStream;
 use lz4_flex::decompress;
-use rusqlite::Row;
-use std::{fmt::Debug, ops::Coroutine, path::Path, str::FromStr};
 use prost::Message;
+use rusqlite::Row;
+use sqlx::{FromRow, Sqlite};
+use std::{fmt::Debug, ops::Coroutine, path::Path, str::FromStr};
 use wx_proto::proto::MsgBytesExtra;
 
 pub mod message_type;
@@ -11,7 +13,7 @@ pub mod message_type;
 pub mod extensions;
 
 #[doc = include_str!("MSG.md")]
-#[derive(Debug)]
+#[derive(Debug, FromRow)]
 pub struct MessageData {
     Sequence: i64,
     Type: i32,
@@ -24,27 +26,6 @@ pub struct MessageData {
     IsSender: i32,
     StrTalker: String,
     strNickName: String,
-}
-
-impl TryFrom<&Row<'_>> for MessageData {
-    type Error = WxError;
-
-    fn try_from(r: &Row) -> WxResult<Self> {
-        let extra: Vec<u8> = r.get("BytesExtra")?;
-        Ok(Self {
-            Sequence: r.get("Sequence")?,
-            Type: r.get("Type")?,
-            SubType: r.get("SubType")?,
-            CreateTime: r.get("CreateTime")?,
-            StrContent: r.get("StrContent")?,
-            CompressContent: r.get("CompressContent")?,
-            BytesExtra: MsgBytesExtra::decode(extra.as_slice())?,
-            SenderId: r.get("SenderId").unwrap_or_default(),
-            IsSender: r.get("IsSender")?,
-            StrTalker: r.get("StrTalker")?,
-            strNickName: r.get("strNickName")?,
-        })
-    }
 }
 
 /// 撤回的消息
@@ -60,9 +41,11 @@ pub struct VoiceMessage {
     xml: LazyXML,
 }
 impl MessageData {
-    pub fn query(db: &SqliteHelper, path: &Path) -> impl Coroutine<Yield = MessageData, Return = WxResult<()>> {
+    pub fn query<'a>(sql: &'a mut SqliteHelper, path: &Path) -> BoxStream<'a, Result<MessageData, sqlx::Error>> {
         let micro_msg = path.join("MicroMsg.db");
-        db.query_as::<MessageData>(include_str!("msg_query.sql"), [micro_msg.to_string_lossy().to_string()])
+        sqlx::query_as::<Sqlite, MessageData>(include_str!("msg_query.sql"))
+            .bind(micro_msg.to_string_lossy().to_string())
+            .fetch(&mut sql.db)
     }
     pub fn binary_as_string(&self) -> WxResult<String> {
         let mut decompress = decompress(&self.CompressContent, 0x10004)?;

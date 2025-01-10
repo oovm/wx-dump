@@ -1,37 +1,28 @@
-use crate::{WxError, WxResult};
+use crate::WxResult;
 use rusqlite::{
-    Connection, Error, Params, Result, Row,
+    Error, Result,
     functions::{Context, FunctionFlags},
 };
-use std::{ops::Coroutine};
+use sqlx::{Connection, SqliteConnection};
 use wx_proto::{Message, proto::MsgBytesExtra};
 pub struct SqliteHelper {
-    db: Connection,
+   pub(crate) db: SqliteConnection,
 }
 
 impl SqliteHelper {
-    pub fn open(jdbc: &str) -> WxResult<Self> {
-        let db = Connection::open(jdbc)?;
-        add_builtin(&db)?;
-        Ok(Self { db })
-    }
-    pub fn query_as<T>(&self, sql: &str, args: impl Params) -> impl Coroutine<Yield = T, Return = WxResult<()>>
-    where
-        T: for<'a, 't> TryFrom<&'a Row<'t>, Error = WxError>,
-    {
-        #[coroutine]
-        static || {
-            let mut s = self.db.prepare(sql)?;
-            let mut m = s.query(args)?;
-            while let Some(row) = m.next()? {
-                yield T::try_from(row)?
-            }
-            Ok(())
+    pub async fn open(jdbc: &str) -> WxResult<Self> {
+        let mut connect = SqliteConnection::connect(jdbc).await?;
+        {
+            let mut handle_lock = connect.lock_handle().await?;
+            let handle = handle_lock.as_raw_handle().as_ptr();
+            let rc = unsafe { rusqlite::Connection::from_handle(handle) }?;
+            add_builtin(&rc)?;
         }
+        Ok(Self { db: connect })
     }
 }
 
-fn add_builtin(db: &Connection) -> Result<()> {
+fn add_builtin(db: &rusqlite::Connection) -> Result<()> {
     db.create_scalar_function(
         "get_sender_id",
         1,

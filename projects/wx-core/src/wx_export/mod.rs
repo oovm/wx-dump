@@ -3,6 +3,8 @@ use crate::{
     helpers::url_display,
     orm_types::{MessageData, extensions::SqliteHelper},
 };
+use futures_util::TryStreamExt;
+use sqlx::{Connection, SqliteConnection, sqlite::SqlitePoolOptions};
 use std::{
     ops::{Coroutine, CoroutineState},
     path::PathBuf,
@@ -56,37 +58,32 @@ impl WxExport {
         Ok(excel.save(&msg)?)
     }
     async fn export_message_on(&self, path: &str, w: &mut XlsxWriter) -> WxResult<()> {
-        let db = SqliteHelper::open(path)?;
-        let mut rows = pin!(MessageData::query(&db, &self.dir));
-        loop {
-            let data = rows.as_mut().resume(());
-            match data {
-                CoroutineState::Yielded(row) => {
-                    w.next_line();
-                    w.write_id64(row.message_id())?;
-                    w.write_time(row.unix_time())?;
-                    w.write_data(row.room_id())?;
-                    w.write_data(row.room_name())?;
-                    w.write_data(row.sender_id())?;
-                    match row.get_type() {
-                        MessageType::TextReference => w.write_data(row.text_reference())?,
-                        MessageType::Image => w.write_data(row.image_path())?,
-                        MessageType::Revoke => w.write_data(row.revoke_message())?,
-                        MessageType::PhoneCall => w.write_data(row.voip_message())?,
-                        MessageType::Voice => w.write_data(row.voice_message())?,
-                        _ => w.write_data(row.text_message())?,
-                    }
-                    w.write_data(row.get_type())?;
-                    if row.is_sender() {
-                        w.write_data("发送")?;
-                    }
-                    else {
-                        w.write_data("接收")?;
-                    }
-                    w.write_data(row.extra_info())?;
-                }
-                CoroutineState::Complete(stop) => return stop,
+        let mut db = SqliteHelper::open(path).await?;
+        let mut rows = MessageData::query(&mut db, &self.dir);
+        while let Some(row) = rows.try_next().await? {
+            w.next_line();
+            w.write_id64(row.message_id())?;
+            w.write_time(row.unix_time())?;
+            w.write_data(row.room_id())?;
+            w.write_data(row.room_name())?;
+            w.write_data(row.sender_id())?;
+            match row.get_type() {
+                MessageType::TextReference => w.write_data(row.text_reference())?,
+                MessageType::Image => w.write_data(row.image_path())?,
+                MessageType::Revoke => w.write_data(row.revoke_message())?,
+                MessageType::PhoneCall => w.write_data(row.voip_message())?,
+                MessageType::Voice => w.write_data(row.voice_message())?,
+                _ => w.write_data(row.text_message())?,
             }
+            w.write_data(row.get_type())?;
+            if row.is_sender() {
+                w.write_data("发送")?;
+            }
+            else {
+                w.write_data("接收")?;
+            }
+            w.write_data(row.extra_info())?;
         }
+        Ok(())
     }
 }
