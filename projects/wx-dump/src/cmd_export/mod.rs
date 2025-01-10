@@ -8,10 +8,18 @@ use wx_core::{WxExport, helpers::url_display};
 pub struct RunExport {
     /// 数据库目录
     pub path: Option<String>,
+    /// 显示会话 ID
     #[arg(long, default_value_t = false)]
     pub room_id: bool,
+    /// 显示发送者 ID
     #[arg(long, default_value_t = false)]
     pub sender_id: bool,
+    /// 破译 `CompressContent` 中的信息
+    #[arg(long, default_value_t = false)]
+    pub compress_content: bool,
+    /// 破译 `BytesExtra` 中的信息
+    #[arg(long, default_value_t = false)]
+    pub bytes_extra: bool,
 }
 
 impl RunExport {
@@ -42,7 +50,13 @@ impl RunExport {
     }
     pub async fn export_db(&self, _: &WxArguments, dir: PathBuf) -> anyhow::Result<()> {
         url_display(&dir, |url| println!("正在导出个人目录: {}", url));
-        let wx = WxExport { path: dir, room_id: self.room_id, sender_id: self.sender_id };
+        let wx = WxExport {
+            path: dir,
+            room_id: self.room_id,
+            sender_id: self.sender_id,
+            compress_content: self.compress_content,
+            extra_content: self.bytes_extra,
+        };
         wx.export_message().await?;
         Ok(())
     }

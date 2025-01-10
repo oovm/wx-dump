@@ -21,14 +21,11 @@ impl<'c> Decode<'c, Sqlite> for MsgBytesExtra {
 }
 
 impl MsgBytesExtra {
-    pub fn pop_sender(&mut self) -> Option<String> {
-        let index = self.string.iter().position(|s| s.r#type == 1)?;
-        let item = self.string.remove(index);
-        Some(item.message)
-    }
+    /// 发送者id
     pub fn get_sender_id(&self) -> &str {
         self.string.iter().find(|pat| pat.r#type == 1).map(|pat| pat.message.as_str()).unwrap_or_default()
     }
+    /// 图片路径
     pub fn get_image_path(&self) -> &str {
         self.string.iter().find(|pat| pat.r#type == 4).map(|pat| pat.message.as_str()).unwrap_or_default()
     }

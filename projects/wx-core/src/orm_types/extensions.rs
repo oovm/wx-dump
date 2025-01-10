@@ -2,7 +2,6 @@ use crate::WxResult;
 use rusqlite::{
     Error, Result,
     functions::{Context, FunctionFlags},
-    types::FromSqlResult,
 };
 use sqlx::{Connection, SqliteConnection};
 use wx_proto::{Message, proto::MsgBytesExtra};

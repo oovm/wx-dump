@@ -4,12 +4,7 @@ use crate::{
     orm_types::{MessageData, extensions::SqliteHelper},
 };
 use futures_util::TryStreamExt;
-use sqlx::{Connection, SqliteConnection, sqlite::SqlitePoolOptions};
-use std::{
-    ops::{Coroutine, CoroutineState},
-    path::PathBuf,
-    pin::pin,
-};
+use std::path::PathBuf;
 use tracing::{error, trace};
 
 /// 导出微信数据库中的数据
@@ -21,6 +16,10 @@ pub struct WxExport {
     pub room_id: bool,
     /// 是否导出发送人ID
     pub sender_id: bool,
+    /// 是否导出 `CompressContent`
+    pub compress_content: bool,
+    /// 是否导出 `BytesExtra`
+    pub extra_content: bool,
 }
 
 impl WxExport {
@@ -44,7 +43,12 @@ impl WxExport {
         excel.write_title("内容", 60.0)?;
         excel.write_title("类型", 15.0)?;
         excel.write_title("事件", 10.0)?;
-        excel.write_title("额外信息", 400.0)?;
+        if self.compress_content {
+            excel.write_title("压缩信息", 400.0)?;
+        }
+        if self.extra_content {
+            excel.write_title("额外信息", 400.0)?;
+        }
         for id in 0..99 {
             let db_path = self.path.join(format!("Multi/MSG{}.db", id));
             if !db_path.exists() {
@@ -90,7 +94,12 @@ impl WxExport {
             else {
                 w.write_data("接收")?;
             }
-            w.write_data(row.extra_info())?;
+            if self.compress_content {
+                w.limit_text(row.compress_content())?;
+            }
+            if self.extra_content {
+                w.limit_text(row.extra_content())?;
+            }
         }
         Ok(())
     }

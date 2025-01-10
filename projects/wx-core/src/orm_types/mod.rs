@@ -1,11 +1,9 @@
 #![allow(non_snake_case, missing_docs)]
-use crate::{WxError, WxResult, helpers::LazyXML, orm_types::extensions::SqliteHelper};
+use crate::{MessageType, WxResult, helpers::LazyXML, orm_types::extensions::SqliteHelper};
 use futures_util::stream::BoxStream;
 use lz4_flex::decompress;
-use prost::Message;
-use rusqlite::Row;
 use sqlx::{FromRow, Sqlite};
-use std::{fmt::Debug, ops::Coroutine, path::Path, str::FromStr};
+use std::{fmt::Debug, path::Path, str::FromStr};
 use wx_proto::proto::MsgBytesExtra;
 
 pub mod message_type;
@@ -49,13 +47,6 @@ impl MessageData {
             .bind(micro_msg.to_string_lossy().to_string())
             .fetch(&mut sql.db)
     }
-    pub fn binary_as_string(&self) -> WxResult<String> {
-        let mut decompress = decompress(&self.CompressContent, 0x10004)?;
-        // 移除字符串末尾的 `<NUL>`
-        let tail = decompress.pop();
-        debug_assert_eq!(tail, Some(0x00));
-        Ok(String::from_utf8(decompress)?)
-    }
 }
 
 impl MessageData {
@@ -71,12 +62,22 @@ impl MessageData {
     pub fn text_message(&self) -> &str {
         &self.StrContent
     }
-    pub fn extra_info(&self) -> WxResult<String> {
+    pub fn compress_content(&self) -> WxResult<String> {
+        if self.CompressContent.is_empty() {
+            return Ok(String::new());
+        }
+        let mut decompress = decompress(&self.CompressContent, 0x10004)?;
+        // 移除字符串末尾的 `<NUL>`
+        let tail = decompress.pop();
+        debug_assert_eq!(tail, Some(0x00));
+        Ok(String::from_utf8(decompress)?)
+    }
+    pub fn extra_content(&self) -> WxResult<String> {
         Ok(format!("{:?}", self.BytesExtra))
     }
     /// 将 `CompressContent` 字段转为 `ReferenceText` 格式
     pub fn text_reference(&self) -> WxResult<String> {
-        let xml = self.binary_as_string()?;
+        let xml = self.compress_content()?;
         Ok(xml)
     }
     pub fn sender_id(&self) -> &str {
@@ -88,7 +89,10 @@ impl MessageData {
         }
         match self.SenderName.as_str() {
             "" => {
-                if self.RoomId.ends_with("@chatroom") {
+                if let MessageType::SystemNotice = self.get_type() {
+                    "<系统>"
+                }
+                else if self.RoomId.ends_with("@chatroom") {
                     "<失联>"
                 }
                 else {
@@ -98,8 +102,8 @@ impl MessageData {
             named => named,
         }
     }
-    pub fn image_path(&self) -> String {
-        "self.BytesExtra.pop_image_path()".to_string()
+    pub fn image_path(&self) -> &str {
+        self.BytesExtra.get_image_path()
     }
     /// 撤回消息
     pub fn revoke_message(&self) -> WxResult<String> {
