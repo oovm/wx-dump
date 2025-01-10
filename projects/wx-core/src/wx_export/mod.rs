@@ -66,7 +66,7 @@ impl WxExport {
             w.write_time(row.unix_time())?;
             w.write_data(row.room_id())?;
             w.write_data(row.room_name())?;
-            w.write_data(row.sender_id())?;
+            w.write_data(row.sender_name())?;
             match row.get_type() {
                 MessageType::TextReference => w.write_data(row.text_reference())?,
                 MessageType::Image => w.write_data(row.image_path())?,

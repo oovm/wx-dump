@@ -19,13 +19,15 @@ pub struct MessageData {
     Type: i32,
     SubType: i32,
     CreateTime: i64,
+    #[sqlx(rename = "StrTalker")]
+    RoomId: String,
+    RoomName: String,
+    SenderId: String,
+    SenderName: String,
+    IsSender: i32,
     StrContent: String,
     CompressContent: Vec<u8>,
     BytesExtra: MsgBytesExtra,
-    SenderId: String,
-    IsSender: i32,
-    StrTalker: String,
-    strNickName: String,
 }
 
 /// 撤回的消息
@@ -61,10 +63,10 @@ impl MessageData {
         self.Sequence
     }
     pub fn room_id(&self) -> &str {
-        &self.StrTalker
+        &self.RoomId
     }
     pub fn room_name(&self) -> &str {
-        &self.strNickName
+        &self.RoomName
     }
     pub fn text_message(&self) -> &str {
         &self.StrContent
@@ -77,8 +79,8 @@ impl MessageData {
         let xml = self.binary_as_string()?;
         Ok(xml)
     }
-    pub fn sender_id(&self) -> &str {
-        &self.SenderId
+    pub fn sender_name(&self) -> &str {
+        &self.SenderName
     }
     pub fn image_path(&self) -> String {
         "self.BytesExtra.pop_image_path()".to_string()
