@@ -87,7 +87,16 @@ impl WxExport {
             match row.get_type() {
                 MessageType::TextReference => w.write_data(row.text_reference())?,
                 MessageType::Image => {
-                    w.write_link(&row.image_path(), &row.image_link(&self.dat, &self.wx_in, &self.wx_out).unwrap_or_default())?
+                    match row.image_link(&self.dat, &self.wx_in, &self.wx_out) {
+                        Ok(o) => {
+                            w.write_link(&row.image_path(), &o)?
+                        }
+                        Err(e) => {
+                            w.write_data(e.to_string())?
+                        }
+                    }
+
+
                 }
                 MessageType::Revoke => w.write_data(row.revoke_message())?,
                 MessageType::PhoneCall => w.write_data(row.voip_message())?,

@@ -115,20 +115,26 @@ impl MessageData {
         format!("{}/{}", dir, file)
     }
     pub fn image_link(&self, decoder: &XorDecryptor, wx_in: &Path, wx_out: &Path) -> WxResult<String> {
-        let rel = self.BytesExtra.get_image_path();
-        let dat = wx_in.join(rel);
-        let input = std::fs::read(&dat)?;
+        let relative_path = self.BytesExtra.get_image_path();
+        let absolute_path = wx_in.join(relative_path);
+        println!("dat: {}", absolute_path.display());
+        let input = std::fs::read(&absolute_path)?;
+
         let (ext, output) = unsafe { decoder.decrypt_bytes(&input) };
-        let file_name = dat.file_stem().and_then(|x| x.to_str()).unwrap_or_default();
-        let dir = match dat.parent() {
+
+        let file_name = absolute_path.file_stem().and_then(|x| x.to_str()).unwrap_or_default();
+        println!("ext: {}, file_name: {}", ext, file_name);
+        let dir = match absolute_path.parent() {
             Some(o) => o.file_name().and_then(|s| s.to_str()).unwrap_or_default(),
             None => return Err(WxError::custom("找不到负极")),
         };
         let out_dir = wx_out.join("MsgAttach").join(dir);
+        println!("out_dir: {}", out_dir.display());
         let out_file = out_dir.join(file_name);
+        println!("out_file: {}", out_file.display());
         create_dir_all(out_dir)?;
         std::fs::write(&out_file, output)?;
-        Ok(format!("file:///MsgAttach/{}/{}", dir, file_name))
+        Ok(format!("file:///./MsgAttach/{}/{}", dir, file_name))
     }
     /// 撤回消息
     pub fn revoke_message(&self) -> WxResult<String> {

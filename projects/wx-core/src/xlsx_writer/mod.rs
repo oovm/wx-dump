@@ -56,13 +56,12 @@ impl XlsxWriter {
     }
     /// 超链接
     pub fn write_link(&mut self, text: &str, link: &str) -> Result<(), XlsxError> {
-        let format = Format::new();
-        self.table.write_url_with_format(
-            self.line,
-            self.column,
-            rust_xlsxwriter::Url::new(link).set_text(text),
-            &format,
-        )?;
+        if link.is_empty() {
+            return self.write_data(text);
+        }
+        else {
+            self.table.write_url(self.line, self.column, rust_xlsxwriter::Url::new(link).set_text(text))?;
+        }
         self.column.add_assign(1);
         Ok(())
     }

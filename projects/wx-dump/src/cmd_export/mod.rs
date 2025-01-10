@@ -50,11 +50,9 @@ impl RunExport {
         Ok(())
     }
     pub async fn export_db(&self, args: &WxArguments, dir: PathBuf) -> anyhow::Result<()> {
-        let wxid = dir.file_name().unwrap().to_str().unwrap();
-        let path = get_wechat_path(&args.wechat_path)?;
         url_display(&dir, |url| println!("正在导出个人目录: {}", url));
         let wx = WxExport {
-            wx_in: path.join("wxid"),
+            wx_in: args.wechat_path()?,
             wx_out: dir,
             dat: Default::default(),
             room_id: self.room_id,

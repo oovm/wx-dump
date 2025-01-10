@@ -1,5 +1,4 @@
-use anyhow::Ok;
-use std::env::current_dir;
+use std::{env::current_dir, path::PathBuf};
 
 mod cmd_copy;
 mod cmd_decrypt;
@@ -19,7 +18,10 @@ pub use crate::{
     cmd_search::RunSearch,
 };
 use clap::{Parser, Subcommand};
-use wx_core::{WxDecryptor, WxScanner, helpers::read_database};
+use wx_core::{
+    WxDecryptor, WxResult, WxScanner,
+    helpers::{get_wechat_path, read_database},
+};
 
 /// 微信聊天记录导出工具
 #[derive(Parser, Debug)]
@@ -109,5 +111,15 @@ impl WxDump {
     #[cfg(not(windows))]
     pub async fn run_auto(_: WxArguments) -> anyhow::Result<()> {
         Ok(())
+    }
+}
+
+impl WxArguments {
+    pub fn wechat_path(&self) -> WxResult<PathBuf> {
+        get_wechat_path(&self.wechat_path)
+    }
+    pub fn wechat_user_path(&self, wxid: &str) -> WxResult<PathBuf> {
+        let wechat_path = self.wechat_path()?;
+        Ok(wechat_path.join(wxid))
     }
 }
