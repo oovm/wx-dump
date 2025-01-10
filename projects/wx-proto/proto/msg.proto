@@ -1,37 +1,39 @@
 syntax = "proto3";
 package wx.core;
 
-
 enum MsgType {
-	/// 未知类型
+	// 未知类型
 	UNKNOWN = 0;
-	/// 发送者
+	// 发送者
 	SENDER = 1;
-	/// 目录
+	// 目录
 	HASH = 2;
+	// 缩略图
 	THUMB_PATH = 3;
+	// 图片
 	IMAGE_PATH = 4;
-	/// 消息来源
+	// 消息来源
 	SOURCE = 7;
 }
 
-/// 消息额外信息
+// 消息额外信息
 message MsgBytesExtra {
-	/// 消息类型
+	// 消息类型
 	message MsgBool {
-		/// 消息类型
+		// 消息类型
 		MsgType type = 1;
-		/// 消息值
+		// 消息值
 		int32 value = 2;
 	}
+	// 消息类型
 	message MsgString {
-		/// 消息类型
+		// 消息类型
 		MsgType type = 1;
-		/// 消息值
+		// 消息值
 		string message = 2;
 	}
-	/// 消息类型
+	// 消息类型
 	MsgBool boolean = 1;
-	/// 消息类型
+	// 消息类型
 	repeated MsgString string = 3;
 }

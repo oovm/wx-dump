@@ -27,8 +27,14 @@ impl MsgBytesExtra {
         Some(item.message)
     }
     pub fn pop_image_path(&mut self) -> Option<String> {
+        // self.pop_thumb();
         let index = self.string.iter().position(|s| s.r#type == 4)?;
         let item = self.string.remove(index);
         Some(item.message)
     }
+    // pub fn pop_thumb(&mut self) -> Option<String> {
+    //     let index = self.string.iter().position(|s| s.r#type == 3)?;
+    //     let item = self.string.remove(index);
+    //     Some(item.message)
+    // }
 }

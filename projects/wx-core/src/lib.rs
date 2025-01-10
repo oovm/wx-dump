@@ -11,6 +11,7 @@ mod wx_decrypt;
 mod wx_export;
 mod wx_scanner;
 mod xlsx_writer;
+mod wx_merger;
 
 pub use crate::{
     errors::{WxError, WxErrorKind, WxResult},

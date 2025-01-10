@@ -38,10 +38,17 @@ pub struct VoiceMessage {
 impl MessageData {
     pub fn query<'a>(db: &'a Pool<Sqlite>, path: &Path) -> BoxStream<'a, sqlx::Result<MessageData>> {
         let micro_msg = path.join("MicroMsg.db");
-        sqlx::query_as::<Sqlite, MessageData>(include_str!("get_msg.sql"))
+        sqlx::query_as::<Sqlite, MessageData>(include_str!("msg_query.sql"))
             .bind(micro_msg.to_string_lossy().to_string())
             .fetch(db)
     }
+    pub fn query_bytes<'a>(db: &'a Pool<Sqlite>, path: &Path) -> BoxStream<'a, sqlx::Result<MessageData>> {
+        // let micro_msg = path.join("MicroMsg.db");
+        sqlx::query_scalar::<Sqlite, Vec<u8>>("select message.BytesExtra from MSG message")
+            // .bind(micro_msg.to_string_lossy().to_string())
+            .fetch(db)
+    }
+
     pub fn binary_as_string(&self) -> WxResult<String> {
         let mut decompress = decompress(&self.CompressContent, 0x10004)?;
         // 移除字符串末尾的 `<NUL>`

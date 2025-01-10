@@ -1,5 +1,5 @@
 attach database ?1 as MicroMsg;
-select message.*, room.strNickName
+select message.*, get_sender_id(BytesExtra) as SenderId, room.strNickName
 -- n.UsrName
 from MSG message
          -- left join Name2ID on n.rowid = MSG.TalkerId

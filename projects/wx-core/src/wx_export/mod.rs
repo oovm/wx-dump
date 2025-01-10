@@ -33,16 +33,17 @@ impl WxExport {
         excel.write_title("内容", 60.0)?;
         excel.write_title("类型", 15.0)?;
         excel.write_title("事件", 10.0)?;
-        excel.write_title("额外信息", 10.0)?;
+        excel.write_title("额外信息", 400.0)?;
         for id in 0..99 {
             let db_path = self.dir.join(format!("Multi/MSG{}.db", id));
+            if !db_path.exists() {
+                break;
+            }
+
             trace!("读取聊天记录: {}", db_path.display());
             match self.export_message_on(db_path, &mut excel).await {
-                Ok(_) => continue,
-                Err(e) => {
-                    error!("读取聊天记录失败: {}", e);
-                    break;
-                }
+                Ok(_) => {}
+                Err(e) => error!("读取聊天记录失败: {}", e),
             }
         }
         let msg = self.dir.join("MSG.xlsx");

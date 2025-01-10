@@ -15,12 +15,8 @@ exclude = ["package.json", "tests/**"]
 [dependencies]
 sqlx = { version = "0.8.2", features = ["sqlite"] }
 prost = { version = "0.13.4" }
-# Only necessary if using Protobuf well-known types:
-prost-types = { version = "0.13.4" }
 
 [dev-dependencies]
-anyhow = "1.0.95"
-tokio = { version = "1.42.0", features = ["full"] }
 
 [build-dependencies]
 protox = "0.7.1"
