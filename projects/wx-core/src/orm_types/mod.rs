@@ -1,9 +1,14 @@
 #![allow(non_snake_case, missing_docs)]
-use crate::{MessageType, WxResult, helpers::LazyXML, orm_types::extensions::SqliteHelper};
+use crate::{
+    MessageType, WxError, WxResult, helpers::LazyXML, orm_types::extensions::SqliteHelper,
+    wx_decrypt::decrypt_dat::XorDecryptor,
+};
 use futures_util::stream::BoxStream;
 use lz4_flex::decompress;
+use rust_xlsxwriter::Url;
 use sqlx::{FromRow, Sqlite};
-use std::{fmt::Debug, path::Path, str::FromStr};
+use std::{fmt::Debug, fs::create_dir_all, path::Path, str::FromStr};
+use tokio::fs::create_dir;
 use wx_proto::proto::MsgBytesExtra;
 
 pub mod message_type;
@@ -102,8 +107,28 @@ impl MessageData {
             named => named,
         }
     }
-    pub fn image_path(&self) -> &str {
-        self.BytesExtra.get_image_path()
+    pub fn image_path(&self) -> String {
+        let full = self.BytesExtra.get_image_path();
+        let mut path = full.rsplit(if cfg!(windows) { "\\" } else { "/" });
+        let file = path.next().unwrap_or_default();
+        let dir = path.next().unwrap_or_default();
+        format!("{}/{}", dir, file)
+    }
+    pub fn image_link(&self, decoder: &XorDecryptor, source: &Path, output: &Path) -> WxResult<String> {
+        let rel = self.BytesExtra.get_image_path();
+        let dat = source.join(rel);
+        let input = std::fs::read(&dat)?;
+        let (ext, output) = unsafe { decoder.decrypt_bytes(&input) };
+        let file_name = dat.with_extension(ext).file_name().and_then(|x| x.to_str()).unwrap_or_default();
+        let dir = match dat.parent() {
+            Some(o) => o.file_name().and_then(|s| s.to_str()).unwrap_or_default(),
+            None => return Err(WxError::custom("找不到负极")),
+        };
+        let out_dir = output.join("MsgAttach").join(dir);
+        let out_file = out_dir.join(file_name);
+        create_dir_all(out_dir)?;
+        std::fs::write(&out_file, output)?;
+        format!("file:///MsgAttach/{}/{}", dir, file_name)
     }
     /// 撤回消息
     pub fn revoke_message(&self) -> WxResult<String> {

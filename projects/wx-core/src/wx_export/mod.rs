@@ -4,6 +4,7 @@ use crate::{
     orm_types::{MessageData, extensions::SqliteHelper},
 };
 use futures_util::TryStreamExt;
+use rust_xlsxwriter::Format;
 use std::path::PathBuf;
 use tracing::{error, trace};
 
@@ -81,7 +82,7 @@ impl WxExport {
             w.write_data(row.sender_name())?;
             match row.get_type() {
                 MessageType::TextReference => w.write_data(row.text_reference())?,
-                MessageType::Image => w.write_data(row.image_path())?,
+                MessageType::Image => w.write_link(&row.image_path(), &row.image_link())?,
                 MessageType::Revoke => w.write_data(row.revoke_message())?,
                 MessageType::PhoneCall => w.write_data(row.voip_message())?,
                 MessageType::Voice => w.write_data(row.voice_message())?,

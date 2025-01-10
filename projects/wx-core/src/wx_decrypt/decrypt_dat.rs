@@ -9,11 +9,11 @@ use std::{
 use walkdir::WalkDir;
 
 #[derive(Debug)]
-pub struct FileHeaderMarks {
+pub struct XorDecryptor {
     magic_heads: BTreeMap<Vec<u8>, String>,
 }
 
-impl Default for FileHeaderMarks {
+impl Default for XorDecryptor {
     fn default() -> Self {
         let mut h = Self { magic_heads: BTreeMap::new() };
         h.add(&[0xFF, 0xD8, 0xFF], "jpg");
@@ -32,7 +32,7 @@ impl Default for FileHeaderMarks {
     }
 }
 
-impl FileHeaderMarks {
+impl XorDecryptor {
     pub fn new(head: &[u8], extension: &str) -> Self {
         let mut h = BTreeMap::new();
         h.insert(head.to_vec(), extension.to_string());

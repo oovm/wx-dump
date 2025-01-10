@@ -48,6 +48,24 @@ impl XlsxWriter {
         self.column.add_assign(1);
         Ok(())
     }
+    /// 自定义单元格格式
+    pub fn write_format(&mut self, data: impl IntoExcelData, format: Format) -> Result<(), XlsxError> {
+        self.table.write_with_format(self.line, self.column, data, &format)?;
+        self.column.add_assign(1);
+        Ok(())
+    }
+    /// 超链接
+    pub fn write_link(&mut self, text: &str, link: &str) -> Result<(), XlsxError> {
+        let format = Format::new();
+        self.table.write_url_with_format(
+            self.line,
+            self.column,
+            rust_xlsxwriter::Url::new(link).set_text(text),
+            &format,
+        )?;
+        self.column.add_assign(1);
+        Ok(())
+    }
     /// Excel 单元格不得超过 32767 字符
     pub(crate) fn limit_text(&mut self, s: WxResult<String>) -> Result<(), XlsxError> {
         match s {
