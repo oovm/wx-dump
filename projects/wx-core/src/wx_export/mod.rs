@@ -3,6 +3,7 @@ use futures_util::TryStreamExt;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::path::PathBuf;
 use tracing::{error, trace};
+use crate::orm_types::extensions::SqliteHelper;
 
 /// 导出微信数据库中的数据
 #[derive(Debug)]
@@ -51,8 +52,7 @@ impl WxExport {
         Ok(excel.save(&msg)?)
     }
     async fn export_message_on(&self, msg: PathBuf, w: &mut XlsxWriter) -> WxResult<()> {
-        let db = SqlitePoolOptions::new();
-        let db = db.connect(&msg.to_str().unwrap_or_default()).await?;
+        let db = SqliteHelper::open(&msg.to_str().unwrap_or_default())?;
         let mut rows = MessageData::query(&db, &self.dir);
         while let Some(mut row) = rows.try_next().await? {
             w.next_line();

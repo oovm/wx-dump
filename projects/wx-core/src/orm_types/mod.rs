@@ -5,10 +5,11 @@ use lz4_flex::decompress;
 use sqlx::{FromRow, Pool, Sqlite};
 use std::{fmt::Debug, path::Path, str::FromStr};
 use wx_proto::proto::MsgBytesExtra;
+use crate::orm_types::extensions::SqliteHelper;
 
 pub mod message_type;
 
-mod extensions;
+pub mod extensions;
 
 #[doc = include_str!("MSG.md")]
 #[derive(Debug, FromRow)]
@@ -38,11 +39,9 @@ pub struct VoiceMessage {
     xml: LazyXML,
 }
 impl MessageData {
-    pub fn query<'a>(db: &'a Pool<Sqlite>, path: &Path) -> BoxStream<'a, sqlx::Result<MessageData>> {
+    pub fn query(db: &SqliteHelper, path: &Path) -> BoxStream<'a, sqlx::Result<MessageData>> {
         let micro_msg = path.join("MicroMsg.db");
-        sqlx::query_as::<Sqlite, MessageData>(include_str!("msg_query.sql"))
-            .bind(micro_msg.to_string_lossy().to_string())
-            .fetch(db)
+        db.query_as(include_str!("msg_query.sql"), [micro_msg])
     }
     pub fn query_bytes<'a>(db: &'a Pool<Sqlite>, path: &Path) -> BoxStream<'a, sqlx::Result<MessageData>> {
         // let micro_msg = path.join("MicroMsg.db");

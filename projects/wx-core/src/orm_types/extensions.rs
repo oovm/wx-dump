@@ -62,16 +62,3 @@ impl TryFrom<&Row<'_>> for Sender {
         Ok(Self { SenderId: value.get("SenderId").unwrap_or_default() })
     }
 }
-
-#[test]
-fn main() -> WxResult<()> {
-    let db = SqliteHelper::open(r#"E:/RustroverProjects/wx_dump_rs/target/wxid_2mq6n5f8ovvf22/Multi/MSG0.db"#)?;
-
-    let is_match: Sender = db.query_as(
-        "SELECT get_sender_id(BytesExtra) AS SenderId FROM MSG;",
-        [],
-    )?;
-
-    println!("{:#?}", is_match);
-    Ok(())
-}
