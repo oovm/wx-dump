@@ -8,6 +8,8 @@ use wx_core::{WxExport, helpers::url_display};
 pub struct RunExport {
     /// 数据库目录
     pub path: Option<String>,
+    pub room_id: bool,
+    pub sender_id: bool,
 }
 
 impl RunExport {
@@ -38,7 +40,7 @@ impl RunExport {
     }
     pub async fn export_db(&self, _: &WxArguments, dir: PathBuf) -> anyhow::Result<()> {
         url_display(&dir, |url| println!("正在导出个人目录: {}", url));
-        let wx = WxExport::new(dir);
+        let wx = WxExport { path: dir, room_id: self.room_id, sender_id: self.sender_id };
         wx.export_message().await?;
         Ok(())
     }

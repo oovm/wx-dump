@@ -79,8 +79,17 @@ impl MessageData {
         let xml = self.binary_as_string()?;
         Ok(xml)
     }
+    pub fn sender_id(&self) -> &str {
+        &self.SenderId
+    }
     pub fn sender_name(&self) -> &str {
-        &self.SenderName
+        if self.is_sender() {
+            return "<自己>";
+        }
+        match self.SenderName.as_str() {
+            "" => "<对方>",
+            named => named,
+        }
     }
     pub fn image_path(&self) -> String {
         "self.BytesExtra.pop_image_path()".to_string()

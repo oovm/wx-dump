@@ -6,7 +6,7 @@ use rusqlite::{
 use sqlx::{Connection, SqliteConnection};
 use wx_proto::{Message, proto::MsgBytesExtra};
 pub struct SqliteHelper {
-   pub(crate) db: SqliteConnection,
+    pub(crate) db: SqliteConnection,
 }
 
 impl SqliteHelper {
@@ -39,6 +39,6 @@ fn get_sender_id(ctx: &Context) -> Result<String, Error> {
     let text = ctx.get_raw(0).as_blob()?;
     match MsgBytesExtra::decode(text) {
         Ok(o) => Ok(o.get_sender_id().to_string()),
-        Err(e) => Err(Error::UserFunctionError(Box::new(e))),
+        Err(e) => Ok(String::new()),
     }
 }
